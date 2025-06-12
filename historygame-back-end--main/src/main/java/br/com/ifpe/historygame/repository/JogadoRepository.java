@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import br.com.ifpe.historygame.entity.Jogado;
 
 public interface JogadoRepository extends JpaRepository<Jogado, Long> {
-    List<Jogado> findByUsuarioUid(String uid);
-    Optional<Jogado> findByUsuarioUidAndJogoId(String uid, Long jogoId);
+    List<Jogado> findByUsuarioId(String usuarioId);
+    Optional<Jogado> findByUsuarioIdAndJogoId(String usuarioId, Long jogoId);
     int countByJogoId(Long jogoId);
 }

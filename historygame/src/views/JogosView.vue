@@ -3,9 +3,16 @@
     <div class="sidebar">
       <GenreFilter @genre-selected="handleGenreSelected" />
     </div>
+
     <div class="main-content">
       <h1 class="text-center mb-4">Buscar Todos os Jogos</h1>
-      
+
+      <div class="d-flex justify-content-end mb-3" v-if="isAdmin">
+        <button @click="adicionarJogo" class="btn btn-success">
+          ➕ Adicionar Jogo
+        </button>
+      </div>
+
       <div class="search-container d-flex justify-content-between align-items-center mb-4">
         <input 
           type="text" 
@@ -15,46 +22,38 @@
           @input="getGames(searchTerm)">
       </div>
 
-    <div v-if="paginatedGames && paginatedGames.length > 0">
-      <div class="card-grid">
-<cardComponent
-  v-for="jogo in paginatedGames"
-  :key="jogo.id"
-  :id="jogo.id"
-  :nome="jogo.nome"
-  :resumo="jogo.resumo"
-  :modoJogo="jogo.modoJogo"
-  :dataLancamento="jogo.dataLancamento"
-  :capa="jogo.capa"
-  @card-click="detalhesPage" />
-
-
+      <div v-if="paginatedGames && paginatedGames.length > 0">
+        <div class="card-grid">
+          <cardComponent
+            v-for="jogo in paginatedGames"
+            :key="jogo.id"
+            :id="jogo.id"
+            :nome="jogo.nome"
+            :resumo="jogo.resumo"
+            :modoJogo="jogo.modoJogo"
+            :dataLancamento="jogo.dataLancamento"
+            :capa="jogo.capa"
+            @edit="editarJogo"
+            @delete="deletarJogo"
+          />
+        </div>
       </div>
-    </div>
-  <p v-else>Nenhum jogo encontrado.</p>
+      <p v-else>Nenhum jogo encontrado.</p>
 
       <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">
           <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <a class="page-link" href="#" @click.prevent="previousPage">Anterior</a>
+            <button class="page-link" @click="previousPage">Anterior</button>
           </li>
-          <li class="page-item" v-if="currentPage > 2">
-            <a class="page-link" href="#" @click.prevent="changePage(1)">1</a>
-          </li>
-          <li class="page-item" v-if="currentPage > 3">
-            <span class="page-link">...</span>
-          </li>
-          <li class="page-item" v-for="page in pagesToShow" :key="page" :class="{ active: currentPage === page }">
-            <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
-          </li>
-          <li class="page-item" v-if="currentPage < totalPages - 2">
-            <span class="page-link">...</span>
-          </li>
-          <li class="page-item" v-if="currentPage < totalPages - 1">
-            <a class="page-link" href="#" @click.prevent="changePage(totalPages)">{{ totalPages }}</a>
+          <li 
+            v-for="page in pagesToShow" 
+            :key="page" 
+            class="page-item" 
+            :class="{ active: currentPage === page }">
+            <button class="page-link" @click="changePage(page)">{{ page }}</button>
           </li>
           <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-            <a class="page-link" href="#" @click.prevent="nextPage">Próximo</a>
+            <button class="page-link" @click="nextPage">Próxima</button>
           </li>
         </ul>
       </nav>
@@ -64,34 +63,43 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import cardComponent from '@/components/cardComponent.vue';
-import JogoService from '@/services/JogoService';
 import { useRouter } from 'vue-router';
-import GenreFilter from "@/components/genreFilter.vue";
+import cardComponent from '@/components/cardComponent.vue';
+import GenreFilter from '@/components/genreFilter.vue';
+import JogoService from '@/services/JogoService';
+import { useAuthStore } from '@/stores/authStore';
 
+const router = useRouter();
 const jogoService = new JogoService();
+const authStore = useAuthStore();
+
 const games = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(9);
 const searchTerm = ref('');
 const selectedGenre = ref(null);
-const router = useRouter();
 
-const totalPages = computed(() => {
-  return Math.ceil(games.value.length / pageSize.value);
+// Autenticação e jogos ao montar
+onMounted(async () => {
+  await authStore.verificarAuth();
+  await getGames();
 });
+
+const isAdmin = computed(() => authStore.isAdmin);
+const totalPages = computed(() => Math.ceil(games.value.length / pageSize.value));
 
 const paginatedGames = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
-  const end = start + pageSize.value;
-  return games.value.slice(start, end);
+  return games.value.slice(start, start + pageSize.value);
 });
 
 const pagesToShow = computed(() => {
-  const startPage = Math.max(currentPage.value - 1, 1);
-  const endPage = Math.min(currentPage.value + 1, totalPages.value);
+  const total = totalPages.value;
+  const current = currentPage.value;
+  const delta = 2;
   const pages = [];
-  for (let i = startPage; i <= endPage; i++) {
+
+  for (let i = Math.max(1, current - delta); i <= Math.min(total, current + delta); i++) {
     pages.push(i);
   }
   return pages;
@@ -99,11 +107,9 @@ const pagesToShow = computed(() => {
 
 const getGames = async (search = '') => {
   try {
-    if (search.trim() === '') {
-      games.value = await jogoService.getAllGames();
-    } else {
-      games.value = await jogoService.searchGamesByName(search);
-    }
+    games.value = search.trim()
+      ? await jogoService.searchGamesByName(search)
+      : await jogoService.getAllGames();
     currentPage.value = 1;
   } catch (error) {
     console.error('Erro ao buscar jogos:', error);
@@ -115,12 +121,30 @@ const getGamesByGenre = async (genre) => {
     if (genre) {
       games.value = await jogoService.getGamesByGenero(genre.nome);
     } else {
-      // Sem filtro, pega todos os jogos
       await getGames();
     }
     currentPage.value = 1;
   } catch (error) {
     console.error('Erro ao buscar jogos por gênero:', error);
+  }
+};
+
+const adicionarJogo = () => {
+  router.push('/admin/jogos/adicionar');
+};
+
+const editarJogo = (id) => {
+  router.push({ name: 'EditarJogo', params: { id } });
+};
+
+const deletarJogo = async (id) => {
+  try {
+    if (confirm('Tem certeza que deseja excluir este jogo?')) {
+      await jogoService.deleteGame(id);
+      await getGames();
+    }
+  } catch (error) {
+    console.error('Erro ao deletar jogo:', error);
   }
 };
 
@@ -142,22 +166,11 @@ const nextPage = () => {
   }
 };
 
-function detalhesPage(id) {
-  router.push({ name: 'DetalhesPage', params: { id } });
-}
-
-
 const handleGenreSelected = (genero) => {
   selectedGenre.value = genero;
   getGamesByGenre(genero);
 };
-
-onMounted(() => {
-  getGames();
-});
-
 </script>
-
 
 
 <style scoped>

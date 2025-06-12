@@ -15,27 +15,28 @@ import br.com.ifpe.historygame.service.FavoritoService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/usuarios/{uid}/favoritos")
+@RequestMapping("/api/usuarios/{usuarioId}/favoritos")
 @RequiredArgsConstructor
 public class FavoritoController {
 
     private final FavoritoService favoritoService;
 
     @PostMapping("/{jogoId}")
-    public ResponseEntity<Void> adicionarFavorito(@PathVariable String uid, @PathVariable Long jogoId) {
-        favoritoService.adicionarFavorito(uid, jogoId);
+
+    public ResponseEntity<Void> adicionarFavorito(@PathVariable String usuarioId, @PathVariable Long jogoId) {
+        favoritoService.adicionarFavorito(usuarioId, jogoId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{jogoId}")
-    public ResponseEntity<Void> removerFavorito(@PathVariable String uid, @PathVariable Long jogoId) {
-        favoritoService.removerFavorito(uid, jogoId);
+    public ResponseEntity<Void> removerFavorito(@PathVariable String usuarioId, @PathVariable Long jogoId) {
+        favoritoService.removerFavorito(usuarioId, jogoId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<FavoritoJogoDTO>> listarFavoritos(@PathVariable String uid) {
-        List<FavoritoJogoDTO> favoritos = favoritoService.listarFavoritos(uid);
+    public ResponseEntity<List<FavoritoJogoDTO>> listarFavoritos(@PathVariable String usuarioId) {
+        List<FavoritoJogoDTO> favoritos = favoritoService.listarFavoritos(usuarioId);
         return ResponseEntity.ok(favoritos);
     }
 

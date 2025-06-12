@@ -23,24 +23,24 @@ public class FavoritoService {
     private final UsuarioRepository usuarioRepository;
     private final JogoRepository jogoRepository;
 
-    public void adicionarFavorito(String uid, Long jogoId) {
-        Usuario usuario = usuarioRepository.findByUid(uid)
+    public void adicionarFavorito(String usuarioId, Long jogoId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         Jogo jogo = jogoRepository.findById(jogoId)
             .orElseThrow(() -> new RuntimeException("Jogo não encontrado"));
 
-        if (favoritoRepository.findByUsuarioUidAndJogoId(uid, jogoId).isEmpty()) {
+        if (favoritoRepository.findByUsuarioIdAndJogoId(usuarioId, jogoId).isEmpty()) {
             favoritoRepository.save(new Favorito(usuario, jogo));
         }
     }
 
-    public void removerFavorito(String uid, Long jogoId) {
-        favoritoRepository.findByUsuarioUidAndJogoId(uid, jogoId)
+    public void removerFavorito(String usuarioId, Long jogoId) {
+        favoritoRepository.findByUsuarioIdAndJogoId(usuarioId, jogoId)
             .ifPresent(favoritoRepository::delete);
     }
 
-    public List<FavoritoJogoDTO> listarFavoritos(String uid) {
-        return favoritoRepository.findByUsuarioUid(uid).stream()
+    public List<FavoritoJogoDTO> listarFavoritos(String usuarioId) {
+        return favoritoRepository.findByUsuarioId(usuarioId).stream()
             .map(fav -> new FavoritoJogoDTO(fav.getJogo(), null))
             .toList();
     }

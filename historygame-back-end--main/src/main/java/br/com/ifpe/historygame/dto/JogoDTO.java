@@ -17,9 +17,27 @@ public class JogoDTO {
     private LocalDate dataLancamento;
     private List<GeneroDTO> generos;
 
-    private Integer favoritados;
+    private Integer favoritos;
     private Integer jogados;
     private Integer desejados;
+    
+    public JogoDTO(Long id, String nome, String resumo, String capa, String modoJogo, LocalDate dataLancamento,
+            List<GeneroDTO> generos, Integer favoritos, Integer jogados, Integer desejados) {
+        this.id = id;
+        this.nome = nome;
+        this.resumo = resumo;
+        this.capa = capa;
+        this.modoJogo = modoJogo;
+        this.dataLancamento = dataLancamento;
+        this.generos = generos;
+        this.favoritos = favoritos;
+        this.jogados = jogados;
+        this.desejados = desejados;
+    }
+
+    public JogoDTO() {
+    }
+
 }
 
 

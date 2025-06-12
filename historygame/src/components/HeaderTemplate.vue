@@ -1,80 +1,65 @@
 <template>
-    <header class="cabeca">
-      <img src="../assets/logo.png" alt="Logo" class="logo">
-      <nav>
-        <ul>
-          <li><router-link to="/">Inicial</router-link></li>
-          <li><router-link to="/jogos">Jogos</router-link></li>
-          <li v-show="autenticado"><router-link to="/favoritos">Favoritos</router-link></li>
-          <li><router-link to="/sobre">Sobre</router-link></li>
-        </ul>
-      </nav>
-      <button @click="entrar" v-show="!autenticado" class="login">Entrar</button>
-      <button @click="registrar" v-show="!autenticado" class="registrar">Registrar</button>
-      <button v-show="autenticado" class="user" @click="perfil">
-        <img src="../assets/do-utilizador.png" alt="UserPic" class="userPic">
-      </button>
-      <button v-show="autenticado" @click="handleLogout" class="logout">Sair</button>
+  <header class="cabeca">
+    <img src="../assets/logo.png" alt="Logo" class="logo">
+    <nav>
+      <ul>
+        <li><router-link to="/">Inicial</router-link></li>
+        <li><router-link to="/jogos">Jogos</router-link></li>
+        <li v-if="autenticado"><router-link to="/favoritos">Lista Pessoal</router-link></li>
+        <li><router-link to="/sobre">Sobre</router-link></li>
+      </ul>
+    </nav>
+    <button @click="entrar" v-if="!autenticado" class="login">Entrar</button>
+    <button @click="registrar" v-if="!autenticado" class="registrar">Registrar</button>
+    <button v-if="autenticado" class="user" @click="perfil">
+      <img src="../assets/do-utilizador.png" alt="UserPic" class="userPic">
+    </button>
+    <button v-if="autenticado" @click="handleLogout" class="logout">Sair</button>
+  </header>
+</template>
 
-    </header>
-  </template>
-  
-  <script>
-  import { auth } from '@/services/firebaseConfig';
-  import { useRouter } from 'vue-router';
-  import { onAuthStateChanged, signOut } from 'firebase/auth';
-  import { ref } from 'vue';
-  
-  export default {
-    name: 'HeaderTemplate',
-    setup() {
-      const router = useRouter(); 
-      const autenticado = ref(false);
-      
-      const entrar = ()=> {
-        router.push("/login");
-      };
+<script>
+import { useRouter } from 'vue-router';
+import { onMounted, computed } from 'vue';
+import { useAuthStore } from '@/stores/authStore';
 
-      const registrar = () => {
-        router.push("/registro");
-      };
+export default {
+  name: 'HeaderTemplate',
+  setup() {
+    const router = useRouter();
+    const authStore = useAuthStore();
 
-      const perfil = () => {
-        router.push("/perfil");
-      };
+    const autenticado = computed(() => authStore.autenticado); // reatividade correta
 
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          autenticado.value = true;
-        } else {
-          autenticado.value = false;
-        }
-      });
+    const entrar = () => router.push("/login");
+    const registrar = () => router.push("/registro");
+    const perfil = () => router.push("/perfil");
 
-      const handleLogout = async () => {
-        try {
-          await signOut(auth);
-          console.log("Usuario deslogado com sucesso");
-          router.push("/");
-
-
-        }
-        catch (error){
-            console.log(error.code);
-            alert(error.message);
-        }
+    const handleLogout = async () => {
+      try {
+        await authStore.logout();
+        router.push("/");
+      } catch (error) {
+        console.error(error);
+        alert("Erro ao fazer logout.");
       }
-  
-      return {
-        autenticado,
-        handleLogout,
-        entrar,
-        registrar,
-        perfil
-      };
-    }
-  };
-  </script>
+    };
+
+    onMounted(() => {
+      authStore.verificarAuth();
+    });
+
+    return {
+      autenticado,
+      handleLogout,
+      entrar,
+      registrar,
+      perfil
+    };
+  }
+};
+</script>
+
 
 
 <style scoped>

@@ -101,117 +101,141 @@
 <script setup>
 import defaultAvatar from '@/assets/default_avatar.jpg';
 import cardComponent from '@/components/cardComponent.vue';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import UserGameService from '@/services/UserGameService';
-import { getAuth } from 'firebase/auth';
+import { useAuthStore } from '@/stores/authStore';
 
+// --- Estado do Componente ---
 const allGames = ref([]);
 const searchTerm = ref('');
 const currentPage = ref(1);
 const itemsPerPage = 6;
-const currentFilter = ref('favoritos'); // manter o filtro atual
-const auth = getAuth();
-const user = ref(null);
-const username = computed(() => user.value?.displayName || 'Usuário');
+const currentFilter = ref('favoritos'); // Filtro inicial
+const isLoading = ref(true); // Para um futuro feedback de loading
 
-// Computeds
-const paginatedGames = computed(() => {
-  const filtered = allGames.value.filter(game =>
+// --- Lógica de Autenticação ---
+const authStore = useAuthStore();
+// ✅ CORRIGIDO: O usuário vem da store, garantindo reatividade e consistência.
+const user = computed(() => authStore.usuario);
+const username = computed(() => user.value?.nome || 'Usuário'); // Usar 'nome' do seu DTO de usuário se disponível
+
+// --- Lógica de Paginação e Filtro (sem alterações) ---
+const filteredGames = computed(() => {
+  if (!allGames.value) return [];
+  return allGames.value.filter(game =>
     game.nome?.toLowerCase().includes(searchTerm.value?.toLowerCase() || '')
   );
+});
+
+const paginatedGames = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
-  return filtered.slice(start, start + itemsPerPage);
+  return filteredGames.value.slice(start, start + itemsPerPage);
 });
 
 const totalPages = computed(() => {
-  return Math.ceil(
-    allGames.value.filter(game =>
-  game.nome?.toLowerCase().includes(searchTerm.value.toLowerCase())
-    ).length / itemsPerPage
-  );
+  return Math.ceil(filteredGames.value.length / itemsPerPage);
 });
 
 const pagesToShow = computed(() => {
   const range = [];
   const total = totalPages.value;
   const current = currentPage.value;
-  const delta = 2;
-  for (let i = Math.max(1, current - delta); i <= Math.min(total, current + delta); i++) {
+  if (total <= 1) return [];
+  for (let i = Math.max(1, current - 1); i <= Math.min(total, current + 1); i++) {
     range.push(i);
   }
   return range;
 });
 
-function previousPage() {
-  if (currentPage.value > 1) currentPage.value--;
-}
+function previousPage() { if (currentPage.value > 1) currentPage.value--; }
+function nextPage() { if (currentPage.value < totalPages.value) currentPage.value++; }
+function changePage(page) { currentPage.value = page; }
 
-function nextPage() {
-  if (currentPage.value < totalPages.value) currentPage.value++;
-}
 
-function changePage(page) {
-  currentPage.value = page;
-}
+// --- Lógica de API ---
 
-// Função principal para buscar jogos de acordo com o filtro
-async function getUserGames(filtro = 'favoritos') {
-  try {
-    const uid = auth.currentUser?.uid;
-    if (!uid) {
-      console.warn('Usuário não autenticado');
-      return;
-    }
-
+// Função principal para buscar jogos do usuário
+async function getUserGames(filtro) {
+  // Se um novo filtro for aplicado, atualiza o estado
+  if (filtro) {
     currentFilter.value = filtro;
-    let jogos = [];
+  }
+  
+  const userId = authStore.usuario?.id;
+  if (!userId) {
+    console.warn('Tentativa de buscar jogos sem ID de usuário.');
+    allGames.value = []; // Limpa a lista se o usuário deslogar
+    return;
+  }
 
-    switch (filtro) {
+  isLoading.value = true;
+  try {
+    let jogos = [];
+    switch (currentFilter.value) {
       case 'favoritos':
-        jogos = await UserGameService.listarFavoritos(uid);
-        console.log('Favoritos retornados:', jogos);
+        jogos = await UserGameService.listarFavoritos(userId);
         break;
       case 'jogados':
-        jogos = await UserGameService.listarJogados(uid);
+        jogos = await UserGameService.listarJogados(userId);
         break;
       case 'desejados':
-        jogos = await UserGameService.listarDesejados(uid);
-        break;
-      case 'todos':
-        jogos = await UserGameService.listarTodos(uid);
+        jogos = await UserGameService.listarDesejados(userId);
         break;
     }
-
     allGames.value = jogos;
-    currentPage.value = 1;
+    currentPage.value = 1; // Reseta a paginação a cada novo filtro
   } catch (error) {
-    console.error('Erro ao buscar jogos do usuário:', error);
+    console.error(`Erro ao buscar lista "${currentFilter.value}":`, error);
+    allGames.value = []; // Limpa a lista em caso de erro
+  } finally {
+    isLoading.value = false;
   }
 }
 
-// Função genérica para remover jogo de uma das listas
+// Função para remover um jogo de qualquer lista
 async function removerJogo(jogoId, tipo) {
+  const userId = authStore.usuario?.id;
+  if (!userId || !tipo) return;
+
   try {
-    const uid = getAuth().currentUser?.uid;
-
-    if (tipo === 'favoritos') {
-      await UserGameService.removerFavorito(uid, jogoId);
-    } else if (tipo === 'jogados') {
-      await UserGameService.removerJogado(uid, jogoId);
-    } else if (tipo === 'desejados') {
-      await UserGameService.removerDesejado(uid, jogoId);
+    const removerMap = {
+      favoritos: UserGameService.removerFavorito,
+      jogados: UserGameService.removerJogado,
+      desejados: UserGameService.removerDesejado,
+    };
+    
+    const removerFuncao = removerMap[tipo];
+    if (removerFuncao) {
+      await removerFuncao(userId, jogoId);
+      // Otimização: em vez de refazer a chamada de API, remove o item localmente.
+      allGames.value = allGames.value.filter(jogo => jogo.id !== jogoId);
     }
-
-    await getUserGames(currentFilter.value); // Atualiza a lista com base no filtro atual
   } catch (error) {
     console.error(`Erro ao remover jogo da lista ${tipo}:`, error);
   }
 }
 
-onMounted(() => {
-  user.value = auth.currentUser;
-  getUserGames(); // padrão = 'favoritados'
+// ✅ CORRIGIDO: Lógica de inicialização robusta
+onMounted(async () => {
+  // Garante que o estado de autenticação da store seja verificado primeiro
+  await authStore.verificarAuth();
+  
+  // Se o usuário estiver autenticado, busca os jogos favoritos (padrão)
+  if (authStore.autenticado) {
+    getUserGames('favoritos');
+  } else {
+    isLoading.value = false; // Se não há usuário, para o loading
+  }
 });
+
+// ✅ BÔNUS: Observa mudanças no login/logout para atualizar a lista dinamicamente
+watch(() => authStore.usuario, (novoUsuario) => {
+    if(novoUsuario) {
+        getUserGames('favoritos'); // Se logou, carrega os favoritos
+    } else {
+        allGames.value = []; // Se deslogou, limpa a lista
+    }
+})
 
 </script>
 

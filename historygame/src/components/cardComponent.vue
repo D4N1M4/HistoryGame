@@ -7,68 +7,92 @@
       <p class="card-text"><strong>Modo de Jogo:</strong> {{ modoJogo }}</p>
       <p class="card-text"><strong>Data de Lançamento:</strong> {{ dataLancamento }}</p>
 
+      <!-- Botões visíveis apenas se for ADMIN -->
+      <div v-if="authStore.isAdmin" class="admin-buttons mt-3">
+        <button @click.stop="emitEdit" class="btn btn-warning me-2">Editar</button>
+        <button @click.stop="emitDelete" class="btn btn-danger">Excluir</button>
+      </div>
+
       <slot name="footer"></slot>
     </div>
   </div>
 </template>
 
-<!-- cardComponent.vue -->
 <script setup>
 import { defineProps, computed, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
 import imagemPadrao from '@/assets/jogosSemImagem.jpg';
 
 const router = useRouter();
-const emit = defineEmits(['card-click']);
+const authStore = useAuthStore();
+const emit = defineEmits(['card-click', 'edit', 'delete']);
 
 const props = defineProps({
-  id: { type: Number, required: true },
-  nome: { type: String, required: true },
-  modoJogo: { type: String, required: true },
-  resumo: { type: String, required: true },
-  dataLancamento: { type: String, required: true },
-  capa: { type: String, required: true },
+  id: Number,
+  nome: String,
+  modoJogo: String,
+  resumo: String,
+  dataLancamento: String,
+  capa: String
 });
 
 const maxLength = 100;
+const truncatedDescricao = computed(() =>
+  props.resumo?.length > maxLength
+    ? props.resumo.slice(0, maxLength) + '...'
+    : props.resumo
+);
 
-const truncatedDescricao = computed(() => {
-  return props.resumo && props.resumo.length > maxLength
-    ? props.resumo.substring(0, maxLength) + '...'
-    : props.resumo;
-});
-
-const fullImageUrl = computed(() => {
-  if (!props.capa || props.capa.trim() === '') {
-    return imagemPadrao;
-  }
-  return props.capa.startsWith('http')
-    ? props.capa
-    : `https:${props.capa.replace('t_thumb', 't_cover_big')}`;
-});
+const fullImageUrl = computed(() =>
+  !props.capa || props.capa.trim() === ''
+    ? imagemPadrao
+    : props.capa.startsWith('http')
+      ? props.capa
+      : `https:${props.capa.replace('t_thumb', 't_cover_big')}`
+);
 
 const handleClick = () => {
   router.push({ name: 'DetalhesPage', params: { id: props.id } });
 };
+
+const emitEdit = () => emit('edit', props.id);
+const emitDelete = () => emit('delete', props.id);
 </script>
+
+<style scoped>
+.admin-buttons button {
+  font-size: 0.9rem;
+  padding: 5px 10px;
+}
+</style>
+
 
 
 <style scoped>
+:root {
+  --card-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  --image-background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+  --text-color: #5a6474;
+  --footer-color: #9a9fa8;
+  --transition-speed: 0.3s;
+}
 .custom-card {
   width: 320px;
-  background: #fff;
+  background: #ffffff;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: 20px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
 }
 
 .custom-card:hover {
   transform: translateY(-5px) scale(1.03);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 20px #a1d9ffaa;
 }
 
 .card-img-top {
@@ -89,14 +113,16 @@ const handleClick = () => {
 }
 
 .card-title {
+  font-family: 'Inter', sans-serif;
   font-weight: 700;
-  font-size: 1.2rem;
-  color: #333;
-  margin-bottom: 10px;
-  line-height: 1.3;
+  font-size: 1.25rem;
+  color: #1a1d24;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
 }
 
 .card-text {
+  font-family: 'Inter', sans-serif;
   color: #666;
   font-size: 0.9rem;
   flex-grow: 1;
@@ -110,6 +136,7 @@ const handleClick = () => {
 }
 
 .card-footer {
+  font-family: 'Inter', sans-serif;
   font-size: 0.8rem;
   color: #999;
   text-align: right;
