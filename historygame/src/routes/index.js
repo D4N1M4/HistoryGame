@@ -6,9 +6,9 @@ import SobrePage from '@/views/SobrePage.vue';
 import TelaLogin from '@/views/TelaLogin.vue';
 import TelaRegistro from '@/views/RegistroView.vue';
 import ForgotPassword from '@/views/ForgotPassword.vue';
-import DetalhesPage from '@/views/DetalhesPage.vue';
 import ProfileView from '@/views/ProfileView.vue';
 import Comment from '../components/commentComponent.vue'
+import EditarJogoPage from '@/views/EditarJogoPage.vue';
 
 
 const routes = [
@@ -19,14 +19,25 @@ const routes = [
   { path: '/login', component: TelaLogin},
   { path: '/registro', component: TelaRegistro},
   {path: '/recuperarsenha', component: ForgotPassword},
-{
-  path: '/jogo/:id',
-  name: 'DetalhesPage',
-  component: () => import('@/views/DetalhesPage.vue')
-},
+  {
+    path: '/jogo/:id',
+    name: 'DetalhesPage',
+    component: () => import('@/views/DetalhesPage.vue')
+  },
   {path: '/perfil', component: ProfileView },
-  {path: '/comentario', component: Comment}
-
+  {path: '/comentario', component: Comment},
+  {
+    path: '/admin/jogos/adicionar',
+    name: 'AdicionarJogo',
+    component: () => import('@/views/AdicionarJogoPage.vue'),
+    meta: { requiresAdmin: true }  // opcional para proteger a rota
+  },
+  {
+    path: '/admin/jogos/editar/:id',
+    name: 'EditarJogo',
+    component: EditarJogoPage,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  }
 
 ];
 

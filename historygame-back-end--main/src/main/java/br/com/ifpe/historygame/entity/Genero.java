@@ -3,6 +3,8 @@ package br.com.ifpe.historygame.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,6 +27,7 @@ public class Genero {
     private String nome;
 
     @ManyToMany(mappedBy = "generos")
+    @JsonIgnore
     private List<Jogo> jogos = new ArrayList<>();
 
     public Genero(String nome) {

@@ -21,24 +21,24 @@ public class JogadoService {
     private final UsuarioRepository usuarioRepository;
     private final JogoRepository jogoRepository;
 
-    public void adicionarJogado(String uid, Long jogoId) {
-        Usuario usuario = usuarioRepository.findByUid(uid)
+    public void adicionarJogado(String usuarioId, Long jogoId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         Jogo jogo = jogoRepository.findById(jogoId)
             .orElseThrow(() -> new RuntimeException("Jogo não encontrado"));
 
-        if (jogadoRepository.findByUsuarioUidAndJogoId(uid, jogoId).isEmpty()) {
+        if (jogadoRepository.findByUsuarioIdAndJogoId(usuarioId, jogoId).isEmpty()) {
             jogadoRepository.save(new Jogado(usuario, jogo));
         }
     }
 
-    public void removerJogado(String uid, Long jogoId) {
-        jogadoRepository.findByUsuarioUidAndJogoId(uid, jogoId)
+    public void removerJogado(String usuarioId, Long jogoId) {
+        jogadoRepository.findByUsuarioIdAndJogoId(usuarioId, jogoId)
             .ifPresent(jogadoRepository::delete);
     }
 
-    public List<JogadoJogoDTO> listarJogados(String uid) {
-        return jogadoRepository.findByUsuarioUid(uid).stream()
+    public List<JogadoJogoDTO> listarJogados(String usuarioId) {
+        return jogadoRepository.findByUsuarioId(usuarioId).stream()
             .map(jog -> new JogadoJogoDTO(jog.getJogo()))
             .toList();
     }

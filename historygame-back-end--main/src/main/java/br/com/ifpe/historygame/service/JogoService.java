@@ -18,9 +18,12 @@ import br.com.ifpe.historygame.repository.FavoritoRepository;
 import br.com.ifpe.historygame.repository.GeneroRepository;
 import br.com.ifpe.historygame.repository.JogadoRepository;
 import br.com.ifpe.historygame.repository.JogoRepository;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
+
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class JogoService {
 
@@ -48,7 +51,7 @@ public JogoDTO buscarPorId(Long id) {
     JogoDTO dto = mapper.toDTO(jogo);
 
     // Adicionando as contagens ao DTO
-    dto.setFavoritados(favoritoRepository.countByJogoId(id));
+    dto.setFavoritos(favoritoRepository.countByJogoId(id));
     dto.setJogados(jogadoRepository.countByJogoId(id));
     dto.setDesejados(desejadoRepository.countByJogoId(id));
 
@@ -149,22 +152,22 @@ public JogoDTO atualizar(Long id, JogoDTO dto) {
                 .toList();
     }
 
-    public List<JogoDTO> listarFavoritosPorUsuario(String uid) {
-        return favoritoRepository.findByUsuarioUid(uid).stream()
+    public List<JogoDTO> listarFavoritosPorUsuario(String usuarioId) {
+        return favoritoRepository.findByUsuarioId(usuarioId).stream()
             .map(Favorito::getJogo)
             .map(mapper::toDTO)
             .toList();
     }
 
-    public List<JogoDTO> listarJogadosPorUsuario(String uid) {
-        return jogadoRepository.findByUsuarioUid(uid).stream()
+    public List<JogoDTO> listarJogadosPorUsuario(String usuarioId) {
+        return jogadoRepository.findByUsuarioId(usuarioId).stream()
             .map(Jogado::getJogo)
             .map(mapper::toDTO)
             .toList();
     }
 
-    public List<JogoDTO> listarDesejadosPorUsuario(String uid) {
-        return desejadoRepository.findByUsuarioUid(uid).stream()
+    public List<JogoDTO> listarDesejadosPorUsuario(String usuarioId) {
+        return desejadoRepository.findByUsuarioId(usuarioId).stream()
             .map(Desejado::getJogo)
             .map(mapper::toDTO)
             .toList();

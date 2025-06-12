@@ -15,27 +15,27 @@ import br.com.ifpe.historygame.service.JogadoService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/usuarios/{uid}/jogados")
+@RequestMapping("/api/usuarios/{usuarioId}/jogados")
 @RequiredArgsConstructor
 public class JogadoController {
 
     private final JogadoService jogadoService;
 
     @PostMapping("/{jogoId}")
-    public ResponseEntity<Void> adicionarJogado(@PathVariable String uid, @PathVariable Long jogoId) {
-        jogadoService.adicionarJogado(uid, jogoId);
+    public ResponseEntity<Void> adicionarJogado(@PathVariable String usuarioId, @PathVariable Long jogoId) {
+        jogadoService.adicionarJogado(usuarioId, jogoId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{jogoId}")
-    public ResponseEntity<Void> removerJogado(@PathVariable String uid, @PathVariable Long jogoId) {
-        jogadoService.removerJogado(uid, jogoId);
+    public ResponseEntity<Void> removerJogado(@PathVariable String usuarioId, @PathVariable Long jogoId) {
+        jogadoService.removerJogado(usuarioId, jogoId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<JogadoJogoDTO>> listarJogados(@PathVariable String uid) {
-        List<JogadoJogoDTO> jogados = jogadoService.listarJogados(uid);
+    public ResponseEntity<List<JogadoJogoDTO>> listarJogados(@PathVariable String usuarioId) {
+        List<JogadoJogoDTO> jogados = jogadoService.listarJogados(usuarioId);
         return ResponseEntity.ok(jogados);
     }
 }

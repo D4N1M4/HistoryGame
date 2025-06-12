@@ -7,5 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import br.com.ifpe.historygame.entity.Usuario;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, String> {
-    Optional<Usuario> findByUid(String uid);
+    Optional<Usuario> findByEmail(String email);
+
 }

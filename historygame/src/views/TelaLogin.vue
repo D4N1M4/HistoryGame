@@ -1,100 +1,95 @@
 <template>
   <div class="login-container">
     <h1>Login</h1>
+
     <form @submit.prevent="handleLogin">
       <label for="username">Usuário</label>
-      <input type="text" id="username" v-model="email" required>
-      
+      <input type="text" id="username" v-model="email" required />
+
       <label for="password">Senha</label>
-      <input type="password" id="password" v-model="password" required>
-      
+      <input type="password" id="password" v-model="password" required />
+
       <button type="submit">Entrar</button>
     </form>
+
     <button @click="loginWithGoogle" class="gsi-material-button">
-  <div class="gsi-material-button-state"></div>
-  <div class="gsi-material-button-content-wrapper">
-    <div class="gsi-material-button-icon">
-      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" xmlns:xlink="http://www.w3.org/1999/xlink" style="display: block;">
-        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-        <path fill="none" d="M0 0h48v48H0z"></path>
-      </svg>
-    </div>
-    <span class="gsi-material-button-contents">Sign in with Google</span>
-    <span style="display: none;">Sign in with Google</span>
-  </div>
-</button>
-    <a class="forgot-password"><router-link to="/recuperarsenha">Esqueceu a senha?</router-link></a>
+      <div class="gsi-material-button-state"></div>
+      <div class="gsi-material-button-content-wrapper">
+        <div class="gsi-material-button-icon">
+          <!-- Ícone do Google -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+        </div>
+        <span class="gsi-material-button-contents">Entrar com Google</span>
+      </div>
+    </button>
+
+    <router-link class="forgot-password" to="/recuperarsenha">
+      Esqueceu a senha?
+    </router-link>
   </div>
 </template>
 
 <script>
 import { ref } from "vue";
-import { useRouter } from 'vue-router';
-import { auth, googleProvider } from "../services/firebaseConfig";
-import { signInWithEmailAndPassword,signInWithPopup } from 'firebase/auth';
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
 
 export default {
   setup() {
-    const email = ref('');
-    const password = ref('');
-    const router = useRouter(); 
-    
-    const currentUser = auth.currentUser;
-
-    if (currentUser) {
-      router.push('/favoritos');
-    } 
-    
+    const email = ref("");
+    const password = ref("");
+    const router = useRouter();
+    const authStore = useAuthStore();
 
     const handleLogin = async () => {
       try {
-        await signInWithEmailAndPassword(auth, email.value, password.value);
+        const response = await fetch("http://localhost:8080/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            username: email.value,
+            password: password.value,
+          }),
+          credentials: "include",
+        });
 
-        email.value='';
-        password.value='';
+    if (!response.ok && !(response.data && response.status === 200) ) { 
+        const errorData = response.body ? await response.json().catch(() => response.text()) : 'Erro desconhecido';
+        throw new Error(typeof errorData === 'string' ? errorData : errorData.message || "Usuário ou senha inválidos");
+    }
+        await authStore.verificarAuth(); 
+
+        email.value = "";
+        password.value = "";
 
         router.push("/favoritos");
-
       } catch (error) {
-        console.log(error.code);
-        alert(error.message);
+        alert(error.message || "Erro ao fazer login");
+        console.error(error);
       }
     };
 
-const loginWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-
-    await fetch("http://localhost:8080/api/usuarios/registrar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        uid: user.uid,
-        nome: user.displayName || "Usuário",
-        email: user.email
-      })
-    });
-
-    router.push('/favoritos');
-  } catch (error) {
-    console.log(error.code);
-    alert("Erro ao fazer login com Google: " + error.message);
-  }
-};
+    const loginWithGoogle = () => {
+      window.location.href = "http://localhost:8080/oauth2/authorization/google";
+    };
 
     return {
       email,
       password,
       handleLogin,
-      loginWithGoogle
+      loginWithGoogle,
     };
-  }
+  },
 };
 </script>
+
 
 <style scoped>
 

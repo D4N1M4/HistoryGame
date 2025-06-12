@@ -1,5 +1,7 @@
 package br.com.ifpe.historygame.dto;
 
+import java.time.LocalDate;
+
 import br.com.ifpe.historygame.entity.Jogo;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +14,7 @@ public class DesejadoJogoDTO {
     private String resumo;
     private String capa;
     private String modoJogo;
-    private String dataLancamento;
+    private LocalDate dataLancamento;
 
     public DesejadoJogoDTO(Jogo jogo) {
         this.id = jogo.getId();
@@ -20,6 +22,6 @@ public class DesejadoJogoDTO {
         this.resumo = jogo.getResumo();
         this.capa = jogo.getCapa();
         this.modoJogo = jogo.getModoJogo();
-        this.dataLancamento = jogo.getDataLancamento().toString();
+        this.dataLancamento = jogo.getDataLancamento();
     }
 }

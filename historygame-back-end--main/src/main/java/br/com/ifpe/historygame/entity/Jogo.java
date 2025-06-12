@@ -33,7 +33,7 @@ public class Jogo {
     @Column(name="dataLancamento", nullable=false)
     private LocalDate dataLancamento;
 
-    @ManyToMany
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
         name = "jogo_genero",
         joinColumns = @JoinColumn(name = "jogo_id"),

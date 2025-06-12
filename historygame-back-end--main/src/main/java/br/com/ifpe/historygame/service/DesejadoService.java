@@ -21,24 +21,24 @@ public class DesejadoService {
     private final UsuarioRepository usuarioRepository;
     private final JogoRepository jogoRepository;
 
-    public void adicionarDesejado(String uid, Long jogoId) {
-        Usuario usuario = usuarioRepository.findByUid(uid)
+    public void adicionarDesejado(String usuarioId, Long jogoId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         Jogo jogo = jogoRepository.findById(jogoId)
             .orElseThrow(() -> new RuntimeException("Jogo não encontrado"));
 
-        if (desejadoRepository.findByUsuarioUidAndJogoId(uid, jogoId).isEmpty()) {
+        if (desejadoRepository.findByUsuarioIdAndJogoId(usuarioId, jogoId).isEmpty()) {
             desejadoRepository.save(new Desejado(usuario, jogo));
         }
     }
 
-    public void removerDesejado(String uid, Long jogoId) {
-        desejadoRepository.findByUsuarioUidAndJogoId(uid, jogoId)
+    public void removerDesejado(String usuarioId, Long jogoId) {
+        desejadoRepository.findByUsuarioIdAndJogoId(usuarioId, jogoId)
             .ifPresent(desejadoRepository::delete);
     }
 
-    public List<DesejadoJogoDTO> listarDesejados(String uid) {
-        return desejadoRepository.findByUsuarioUid(uid).stream()
+    public List<DesejadoJogoDTO> listarDesejados(String usuarioId) {
+        return desejadoRepository.findByUsuarioId(usuarioId).stream()
             .map(fav -> new DesejadoJogoDTO(fav.getJogo()))
             .toList();
     }

@@ -7,9 +7,6 @@ export default class JogoService {
     return api.get(JOGO_ENDPOINT).then(res => res.data);
   }
 
-  getGameById(id) {
-  return api.get(`/jogos/${id}`).then(res => res.data);
-  }
 
   searchGamesByName(nome) {
     return api.get(`${JOGO_ENDPOINT}/buscar`, { params: { busca: nome } }).then(res => res.data);
@@ -34,4 +31,5 @@ export default class JogoService {
   deleteGame(id) {
     return api.delete(`${JOGO_ENDPOINT}/${id}`);
   }
+
 }
