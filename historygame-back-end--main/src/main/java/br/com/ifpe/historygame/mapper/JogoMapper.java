@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 @Component
 public class JogoMapper {
 
-
     public JogoDTO toDTO(Jogo jogo) {
         JogoDTO dto = new JogoDTO();
         dto.setId(jogo.getId());
@@ -19,6 +18,10 @@ public class JogoMapper {
         dto.setCapa(jogo.getCapa());
         dto.setModoJogo(jogo.getModoJogo());
         dto.setDataLancamento(jogo.getDataLancamento());
+
+        // --- ADIÇÃO NECESSÁRIA AQUI ---
+        dto.setNumeroAcessos(jogo.getNumeroAcessos());
+        // --- FIM DA ADIÇÃO ---
 
         dto.setGeneros(
             jogo.getGeneros().stream()
@@ -29,20 +32,24 @@ public class JogoMapper {
         return dto;
     }
 
-public Jogo toEntity(JogoDTO dto) {
-    Jogo jogo = new Jogo();
-    jogo.setId(dto.getId());
-    jogo.setNome(dto.getNome());
-    jogo.setResumo(dto.getResumo());
-    jogo.setCapa(dto.getCapa());
-    jogo.setModoJogo(dto.getModoJogo());
-    jogo.setDataLancamento(dto.getDataLancamento());
+    public Jogo toEntity(JogoDTO dto) {
+        Jogo jogo = new Jogo();
+        jogo.setId(dto.getId());
+        jogo.setNome(dto.getNome());
+        jogo.setResumo(dto.getResumo());
+        jogo.setCapa(dto.getCapa());
+        jogo.setModoJogo(dto.getModoJogo());
+        jogo.setDataLancamento(dto.getDataLancamento());
 
-    jogo.setGeneros(dto.getGeneros().stream()
-         .map(this::toGenero)
-         .collect(Collectors.toList()));
-    return jogo;
-}
+        // Para consistência, você também pode querer mapear numeroAcessos de volta para a entidade
+        // ao converter de DTO para Entity, especialmente se o DTO for usado para criar ou atualizar.
+        jogo.setNumeroAcessos(dto.getNumeroAcessos() != null ? dto.getNumeroAcessos() : 0L);
+
+        jogo.setGeneros(dto.getGeneros().stream()
+           .map(this::toGenero)
+           .collect(Collectors.toList()));
+        return jogo;
+    }
 
     public GeneroDTO toGeneroDTO(Genero genero) {
         GeneroDTO dto = new GeneroDTO();
@@ -57,5 +64,4 @@ public Jogo toEntity(JogoDTO dto) {
         genero.setNome(dto.getNome());
         return genero;
     }
-
 }

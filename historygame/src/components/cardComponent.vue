@@ -6,6 +6,7 @@
       <p class="card-text">{{ truncatedDescricao }}</p>
       <p class="card-text"><strong>Modo de Jogo:</strong> {{ modoJogo }}</p>
       <p class="card-text"><strong>Data de Lançamento:</strong> {{ dataLancamento }}</p>
+      <p class="card-text accesses-count"><strong>Acessos:</strong> {{ numeroAcessos }}</p>
 
       <!-- Botões visíveis apenas se for ADMIN -->
       <div v-if="authStore.isAdmin" class="admin-buttons mt-3">
@@ -23,10 +24,11 @@ import { defineProps, computed, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import imagemPadrao from '@/assets/jogosSemImagem.jpg';
+import api from 'axios';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const emit = defineEmits(['card-click', 'edit', 'delete']);
+const emit = defineEmits(['card-click', 'access-incremented','edit', 'delete']); // ADICIONE 'access-incremented'
 
 const props = defineProps({
   id: Number,
@@ -35,6 +37,7 @@ const props = defineProps({
   resumo: String,
   dataLancamento: String,
   capa: String
+  numeroAcessos: { type: Number, default: 0 }
 });
 
 const maxLength = 100;
@@ -52,22 +55,22 @@ const fullImageUrl = computed(() =>
       : `https:${props.capa.replace('t_thumb', 't_cover_big')}`
 );
 
-const handleClick = () => {
-  router.push({ name: 'DetalhesPage', params: { id: props.id } });
+// MODIFIQUE O MÉTODO handleClick
+const handleClick = async () => {
+  try {
+    await api.patch(`http://localhost:8080/api/jogos/${props.id}/acesso`);
+    console.log(`Acesso incrementado para o jogo ID: ${props.id}`);
+    emit('access-incremented', props.id); // EMITE O EVENTO
+  } catch (error) {
+    console.error(`Erro ao incrementar acessos para o jogo ID: ${props.id}`, error);
+  } finally {
+    router.push({ name: 'DetalhesPage', params: { id: props.id } });
+  }
 };
 
 const emitEdit = () => emit('edit', props.id);
 const emitDelete = () => emit('delete', props.id);
 </script>
-
-<style scoped>
-.admin-buttons button {
-  font-size: 0.9rem;
-  padding: 5px 10px;
-}
-</style>
-
-
 
 <style scoped>
 :root {
@@ -98,10 +101,10 @@ const emitDelete = () => emit('delete', props.id);
 .card-img-top {
   width: 100%;
   height: 220px;
-  object-fit: contain; /* para exibir a imagem completa */
-  background-color: #f5f5f5; /* cor neutra atrás da imagem */
+  object-fit: contain;
+  background-color: #f5f5f5;
   border-bottom: 1px solid #e0e0e0;
-  padding: 10px; /* espaçamento para a imagem não ficar grudada */
+  padding: 10px;
 }
 
 .card-body {
@@ -130,9 +133,15 @@ const emitDelete = () => emit('delete', props.id);
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 3; /* limita a 3 linhas */
-  line-clamp: 3; /* padrão para compatibilidade */
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+.accesses-count {
+  font-weight: bold;
+  color: #000;
+  margin-top: 10px;
 }
 
 .card-footer {
@@ -140,5 +149,14 @@ const emitDelete = () => emit('delete', props.id);
   font-size: 0.8rem;
   color: #999;
   text-align: right;
+}
+.accesses-count {
+  font-weight: bold;
+  color: #000; /* Ou a cor que preferir para destaque */
+  margin-top: 10px;
+}
+.admin-buttons button {
+  font-size: 0.9rem;
+  padding: 5px 10px;
 }
 </style>

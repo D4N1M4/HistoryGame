@@ -69,7 +69,9 @@ public class SecurityConfig {
                     "/api/jogos",
                     "/api/generos",
                     "/api/generos/**",
-                    "/api/jogos/genero/{nomeGenero}"
+                    "/api/jogos/genero/{nomeGenero}",
+                    "/api/jogos/acesssos",
+
                 ).permitAll()
                 .requestMatchers("/admin/**", "/api/usuarios/admin/**").hasRole("ADMIN")
                 .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")

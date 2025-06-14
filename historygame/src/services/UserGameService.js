@@ -2,7 +2,6 @@
 import api from '@/assets/js/axios';
 
 export default {
-// Favoritos
 async adicionarFavorito(usuarioId, jogoId) {
   return api.post(`/usuarios/${usuarioId}/favoritos/${Number(jogoId)}`, {}, {
     withCredentials: true
@@ -66,5 +65,13 @@ async removerDesejado(usuarioId, jogoId) {
   async getMaisFavoritados() {
     const res = await api.get(`/jogos/favoritos/mais`);
     return res.data;
-  }
+  },
+
+  // --- NOVO MÉTODO PARA MAIS ACESSADOS ---
+  async getMaisAcessados(limit = 3) { // Adicione um limite padrão, 
+    const res = await axios.get(`${API_URL}/jogos/mais-acessados?limit=${limit}`);
+    return res.data;
+  },
+
+
 };

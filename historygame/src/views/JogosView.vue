@@ -21,7 +21,7 @@
           v-model="searchTerm" 
           @input="getGames(searchTerm)">
       </div>
-
+      
       <div v-if="paginatedGames && paginatedGames.length > 0">
         <div class="card-grid">
           <cardComponent
@@ -33,6 +33,7 @@
             :modoJogo="jogo.modoJogo"
             :dataLancamento="jogo.dataLancamento"
             :capa="jogo.capa"
+            :numeroAcessos="jogo.numeroAcessos" @card-click="detalhesPage"
             @edit="editarJogo"
             @delete="deletarJogo"
           />
@@ -172,7 +173,6 @@ const handleGenreSelected = (genero) => {
 };
 </script>
 
-
 <style scoped>
 .games-page {
   display: flex;
@@ -247,5 +247,4 @@ const handleGenreSelected = (genero) => {
 .page-item.active .page-link {
   font-weight: bold;
 }
-
 </style>
