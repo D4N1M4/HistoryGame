@@ -65,32 +65,43 @@
     </div>
 
     <!-- Seção Sobre -->
-    <div class="about-section">
-      <div class="header">
-        <h1>SOBRE</h1>
-      </div>
-      <table class="info-table">
-        <thead>
-          <tr>
-            <th>Nomes alternativos</th>
-            <th>Gêneros</th>
-            <th>Modo de jogo</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span v-for="nome in game.nomesAlternativos" :key="nome">{{ nome }} <br /></span></td>
-            <td><span v-for="genero in game.generos" :key="genero.id">{{ genero.nome }} <br /></span></td>
-            <td><span v-for="modo in game.modosDeJogo" :key="modo">{{ modo }} <br /></span></td>
-          </tr>
-        </tbody>
-      </table>
+<div class="about-section">
+  <div class="header">
+    <h1>SOBRE</h1>
+  </div>
+  <table class="info-table">
+    <thead>
+      <tr>
+        <th>Gêneros</th>
+        <th>Modo de jogo</th>
+        <th>Data de Lançamento</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <!-- Gêneros -->
+        <td>
+          <span v-for="genero in game.generos" :key="genero.id">
+            {{ genero.nome }}<br />
+          </span>
+        </td>
 
-      <div class="history-section">
-        <h2>História</h2>
-        <p>{{ game.resumo }}</p>
-      </div>
-    </div>
+        <!-- Modo de Jogo -->
+        <td>
+          <span v-if="Array.isArray(game.modosDeJogo)">
+            <span v-for="modo in game.modosDeJogo" :key="modo">{{ modo }}<br /></span>
+          </span>
+          <span v-else>{{ game.modoJogo }}</span>
+        </td>
+
+        <!-- Data de Lançamento -->
+        <td>
+          {{ formatarData(game.dataLancamento) }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
     <!-- Avaliações de Usuários -->
     <div class="about-section">
@@ -145,7 +156,16 @@ export default {
 
     const gameId = ref(route.params.id);
     const slug = ref(route.params.slug);
-    const game = ref({});
+    const game = ref({
+      id: null,
+      nome: '',
+      resumo: '',
+      capa: '/img/jogoPadrao.png',
+      modoJogo: '',
+      dataLancamento: '',
+      generos: [],
+      modosDeJogo: [] // opcional, dependendo do que sua API retorna
+    });
     const selectedStars = ref(0);
     const reviews = ref([]);
     const showCommentModal = ref(false);
@@ -153,6 +173,24 @@ export default {
     const isFavorito = ref(false);
     const isJogado = ref(false);
     const isDesejado = ref(false);
+
+const formatarData = (data) => {
+  if (!data) return 'Não informada';
+  const dataFormatada = new Date(data);
+  return dataFormatada.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
+const modosDeJogoNormalizado = computed(() => {
+  return Array.isArray(game.value.modosDeJogo)
+    ? game.value.modosDeJogo
+    : game.value.modoJogo
+      ? [game.value.modoJogo]
+      : [];
+});
 
     const fullImageUrl = computed(() => {
       const cover = game.value.capa;
@@ -198,6 +236,8 @@ export default {
         console.error("Erro ao carregar mais reviews:", error);
       }
     };
+
+    
 
 const updateUserStatus = async (userId) => {
   try {
@@ -287,6 +327,8 @@ const userGames = async (field) => {
       showCommentModal,
       handleClose,
       userGames,
+      formatarData,
+      modosDeJogoNormalizado,
       isFavorito,
       isJogado,
       isDesejado,
@@ -310,7 +352,7 @@ const userGames = async (field) => {
     margin: 20px auto;
     background: #fff;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(110, 194, 253, 0.571);
     overflow: hidden;
   }
   
@@ -411,7 +453,7 @@ const userGames = async (field) => {
     margin: 20px auto;
     background: #fff;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(110, 194, 253, 0.571);
     overflow: hidden;
   }
   
@@ -424,13 +466,14 @@ const userGames = async (field) => {
   
   .header h1 {
     margin: 0;
+    color: #d0d0d0;
     font-size: 24px;
   }
   
   .info-table {
     width: 100%;
     border-collapse: unset;
-    text-align: left;
+    text-align: center;
     margin: 20px 0;
   }
   
@@ -448,20 +491,6 @@ const userGames = async (field) => {
   
   .info-table tr:nth-child(even) {
     background-color: #f9f9f9;
-  }
-  
-  .history-section {
-    padding: 20px;
-  }
-  
-  .history-section h2 {
-    font-size: 20px;
-    margin-bottom: 10px;
-  }
-  
-  .history-section p {
-    font-size: 16px;
-    color: #555;
   }
   
   /* Estilo dos Quadrados de Avaliação de Usuários */

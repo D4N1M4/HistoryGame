@@ -45,6 +45,9 @@
   :resumo="jogo.resumo"
   :dataLancamento="jogo.dataLancamento"
   :capa="jogo.capa"
+    :numeroAcessos="jogo.numeroAcessos"
+  @card-click="detalharJogos(jogo.id)"
+  @access-incremented="handleAccessIncremented"
 >
   <template v-if="['favoritos', 'jogados', 'desejados'].includes(currentFilter)" #footer>
     <button 

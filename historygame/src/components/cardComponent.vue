@@ -6,6 +6,7 @@
       <p class="card-text">{{ truncatedDescricao }}</p>
       <p class="card-text"><strong>Modo de Jogo:</strong> {{ modoJogo }}</p>
       <p class="card-text"><strong>Data de Lançamento:</strong> {{ dataLancamento }}</p>
+      <p class="card-text accesses-count"><strong>Acessos:</strong> {{ numeroAcessos }}</p>
 
       <!-- Botões visíveis apenas se for ADMIN -->
       <div v-if="authStore.isAdmin" class="admin-buttons mt-3">
@@ -23,10 +24,11 @@ import { defineProps, computed, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import imagemPadrao from '@/assets/jogosSemImagem.jpg';
+import api from 'axios';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const emit = defineEmits(['card-click', 'edit', 'delete']);
+const emit = defineEmits(['card-click',  'access-incremented', 'edit', 'delete']);
 
 const props = defineProps({
   id: Number,
@@ -34,7 +36,8 @@ const props = defineProps({
   modoJogo: String,
   resumo: String,
   dataLancamento: String,
-  capa: String
+  capa: String,
+  numeroAcessos: { type: Number, default: 0 }
 });
 
 const maxLength = 100;
@@ -52,22 +55,21 @@ const fullImageUrl = computed(() =>
       : `https:${props.capa.replace('t_thumb', 't_cover_big')}`
 );
 
-const handleClick = () => {
-  router.push({ name: 'DetalhesPage', params: { id: props.id } });
+const handleClick = async () => {
+  try {
+    await api.patch(`http://localhost:8080/api/jogos/${props.id}/acesso`);
+    console.log(`Acesso incrementado para o jogo ID: ${props.id}`);
+    emit('access-incremented', props.id);
+  } catch (error) {
+    console.error(`Erro ao incrementar acessos para o jogo ID: ${props.id}`, error);
+  } finally {
+    router.push({ name: 'DetalhesPage', params: { id: props.id } });
+  }
 };
 
 const emitEdit = () => emit('edit', props.id);
 const emitDelete = () => emit('delete', props.id);
 </script>
-
-<style scoped>
-.admin-buttons button {
-  font-size: 0.9rem;
-  padding: 5px 10px;
-}
-</style>
-
-
 
 <style scoped>
 :root {
@@ -140,5 +142,14 @@ const emitDelete = () => emit('delete', props.id);
   font-size: 0.8rem;
   color: #999;
   text-align: right;
+}
+.accesses-count {
+  font-weight: bold;
+  color: #000;
+  margin-top: 10px;
+}
+.admin-buttons button {
+  font-size: 0.9rem;
+  padding: 5px 10px;
 }
 </style>
