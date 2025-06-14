@@ -1,5 +1,3 @@
-// src/main/java/br/com/ifpe/historygame/service/JogoService.java
-
 package br.com.ifpe.historygame.service;
 
 import java.util.ArrayList;
@@ -8,7 +6,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import br.com.ifpe.historygame.dto.JogoDTO;
 import br.com.ifpe.historygame.entity.Desejado;
@@ -22,14 +19,14 @@ import br.com.ifpe.historygame.repository.FavoritoRepository;
 import br.com.ifpe.historygame.repository.GeneroRepository;
 import br.com.ifpe.historygame.repository.JogadoRepository;
 import br.com.ifpe.historygame.repository.JogoRepository;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
-
-// IMPORTANTE: Adicione estes imports
 import org.springframework.data.domain.PageRequest; 
 import org.springframework.data.domain.Pageable; 
 import org.springframework.data.domain.Sort; 
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class JogoService {
 
@@ -179,22 +176,22 @@ public class JogoService {
                 .toList();
     }
 
-    public List<JogoDTO> listarFavoritosPorUsuario(String uid) {
-        return favoritoRepository.findByUsuarioUid(uid).stream()
+    public List<JogoDTO> listarFavoritosPorUsuario(String usuarioId) {
+        return favoritoRepository.findByUsuarioId(usuarioId).stream()
             .map(Favorito::getJogo)
             .map(mapper::toDTO)
             .toList();
     }
 
-    public List<JogoDTO> listarJogadosPorUsuario(String uid) {
-        return jogadoRepository.findByUsuarioUid(uid).stream()
+    public List<JogoDTO> listarJogadosPorUsuario(String usuarioId) {
+        return jogadoRepository.findByUsuarioId(usuarioId).stream()
             .map(Jogado::getJogo)
             .map(mapper::toDTO)
             .toList();
     }
 
-    public List<JogoDTO> listarDesejadosPorUsuario(String uid) {
-        return desejadoRepository.findByUsuarioUid(uid).stream()
+    public List<JogoDTO> listarDesejadosPorUsuario(String usuarioId) {
+        return desejadoRepository.findByUsuarioId(usuarioId).stream()
             .map(Desejado::getJogo)
             .map(mapper::toDTO)
             .toList();

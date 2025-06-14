@@ -15,13 +15,29 @@ public class JogoDTO {
     private String capa;
     private String modoJogo;
     private LocalDate dataLancamento;
-    private List<GeneroDTO> generos; // Supondo que você tem um GeneroDTO
-
-    // Campos de contagem existentes
-    private Integer favoritados;
+    private List<GeneroDTO> generos;
+    private Long numeroAcessos;
+  
+    private Integer favoritos;
     private Integer jogados;
     private Integer desejados;
+    
+    public JogoDTO(Long id, String nome, String resumo, String capa, String modoJogo, LocalDate dataLancamento,
+            List<GeneroDTO> generos, Integer favoritos, Integer jogados, Integer desejados, Long numeroAcessos) {
+        this.id = id;
+        this.nome = nome;
+        this.resumo = resumo;
+        this.capa = capa;
+        this.modoJogo = modoJogo;
+        this.dataLancamento = dataLancamento;
+        this.generos = generos;
+        this.favoritos = favoritos;
+        this.jogados = jogados;
+        this.desejados = desejados;
+        this.numeroAcessos= numeroAcessos;
+    }
 
-    // --- NOVO CAMPO ADICIONADO ---
-    private Long numeroAcessos;
+    public JogoDTO() {
+    }
+
 }

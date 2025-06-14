@@ -1,42 +1,46 @@
 <template>
-    <div class="forgot-password-container">
-      <h1>Redefinir Senha</h1>
-      <form @submit.prevent="handleForgotPassword">
-        <label for="email">Email</label>
-        <input type="email" id="email" v-model="email" required>
-        <button type="submit" class="submit-button">Enviar Email de Redefinição</button>
-      </form>
-    </div>
-  </template>
-  
-  <script>
-  import { ref } from 'vue';
-  import { auth } from '@/services/firebaseConfig';
-  import { sendPasswordResetEmail } from 'firebase/auth';
-  
-  export default {
-    name: 'ForgotPassword',
-    setup() {
-      const email = ref('');
-  
-      const handleForgotPassword = async () => {
-        try {
-          await sendPasswordResetEmail(auth, email.value);
-          console.log("Password reset email sent successfully.");
-          alert("Email de redefinição de senha enviado com sucesso.");
-        } catch (error) {
-          console.log("SendPasswordResetEmail encountered an error: ", error);
-          alert("Erro ao enviar o email de redefinição de senha: " + error.message);
-        }
-      };
-  
-      return {
-        email,
-        handleForgotPassword
-      };
-    }
-  };
-  </script>
+  <div class="forgot-password-container">
+    <h1>Redefinir Senha</h1>
+    <form @submit.prevent="handleForgotPassword">
+      <label for="email">Email</label>
+      <input type="email" id="email" v-model="email" required />
+
+      <label for="novaSenha">Nova Senha</label>
+      <input type="password" id="novaSenha" v-model="novaSenha" required />
+
+      <button type="submit">Redefinir Senha</button>
+    </form>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import api from '@/assets/js/axios';
+
+const email = ref('');
+const novaSenha = ref('');
+const router = useRouter();
+
+const handleForgotPassword = async () => {
+  try {
+    await api.post('/usuarios/redefinir-senha', {
+      email: email.value,
+      novaSenha: novaSenha.value
+    });
+
+    window.alert('Senha alterada com sucesso!');
+    router.push('/login');
+  } catch (err) {
+    console.error(err);
+
+      const msg = err.response?.data?.message || 'E-mail não encontrado. Verifique se digitou corretamente.';
+      window.alert(msg);
+
+  }
+};
+</script>
+
   
   <style>
   /* Estilos baseados na tela de login */

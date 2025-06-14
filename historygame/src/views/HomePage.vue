@@ -212,10 +212,24 @@ onMounted(() => {
 
 
 <style scoped>
-/* AQUI ESTAVA O ERRO DE SINTAXE. Removidas as anotações e corrigida a sintaxe CSS. */
-/* Seus estilos CSS permanecem os mesmos */
+:root {
+  --cor-fundo: #f4f7f6;
+  --cor-texto: #333;
+  --cor-titulo: #1a1a1a;
+  --cor-primaria: #007bff; /* Um azul vibrante */
+  --cor-branco: #ffffff;
+  --sombra-card: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: 'Poppins', 'Arial', sans-serif;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+
 }
 
 .container {
@@ -236,6 +250,10 @@ body {
   margin: 0 auto; /* Centralizar os cards dentro das colunas */
 }
 
+.pagination-container {
+  margin-top: 40px;
+}
+
 .pagination {
   display: flex;
   justify-content: center;
@@ -247,25 +265,44 @@ body {
   margin: 0 5px;
 }
 
-.page-link {
-  color: black;
-  text-decoration: none;
-}
-
-.page-link:hover {
-  text-decoration: underline;
-}
-
-.page-item.active .page-link {
-  font-weight: bold;
-}
-
-/* Estilos para mensagens de carregamento, erro e vazio */
 .loading-message {
   text-align: center;
   font-size: 1.1em;
   color: #888;
   margin-top: 20px;
+  margin: 0 4px;
+}
+
+.page-link {
+  display: block;
+  padding: 10px 16px;
+  color: var(--cor-primaria);
+  background-color: var(--cor-branco);
+  border: 1px solid #dee2e6;
+  border-radius: 50px;  
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.page-link:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+}
+
+.page-item.active .page-link {
+  background-color: var(--cor-primaria);
+  color: var(--cor-branco);
+  border-color: var(--cor-primaria);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.4);
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  background-color: var(--cor-branco);
+  border-color: #dee2e6;
+
 }
 
 .error-message {

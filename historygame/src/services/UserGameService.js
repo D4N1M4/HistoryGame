@@ -1,60 +1,69 @@
-import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api';
+import api from '@/assets/js/axios';
 
 export default {
-  // Favoritos
-  async adicionarFavorito(uid, jogoId) {
-    return axios.post(`${API_URL}/usuarios/${uid}/favoritos/${Number(jogoId)}`);
-  },
+async adicionarFavorito(usuarioId, jogoId) {
+  return api.post(`/usuarios/${usuarioId}/favoritos/${Number(jogoId)}`, {}, {
+    withCredentials: true
+  });
+},
 
-  async removerFavorito(uid, jogoId) {
-    return axios.delete(`${API_URL}/usuarios/${uid}/favoritos/${jogoId}`);
-  },
+async removerFavorito(usuarioId, jogoId) {
+  return api.delete(`/usuarios/${usuarioId}/favoritos/${Number(jogoId)}`, {
+    withCredentials: true
+  });
+},
 
-  async listarFavoritos(uid) {
-    const res = await axios.get(`${API_URL}/usuarios/${uid}/favoritos`);
+  async listarFavoritos(usuarioId) {
+    const res = await api.get(`/usuarios/${usuarioId}/favoritos`);
     return res.data;
   },
 
-  // Jogados
-  async adicionarJogado(uid, jogoId) {
-    return axios.post(`${API_URL}/usuarios/${uid}/jogados/${Number(jogoId)}`);
-  },
+// Jogados
+async adicionarJogado(usuarioId, jogoId) {
+  return api.post(`/usuarios/${usuarioId}/jogados/${Number(jogoId)}`, {}, {
+    withCredentials: true
+  });
+},
 
-  async removerJogado(uid, jogoId) {
-    return axios.delete(`${API_URL}/usuarios/${uid}/jogados/${jogoId}`);
-  },
+async removerJogado(usuarioId, jogoId) {
+  return api.delete(`/usuarios/${usuarioId}/jogados/${Number(jogoId)}`, {
+    withCredentials: true
+  });
+},
 
-  async listarJogados(uid) {
-    const res = await axios.get(`${API_URL}/usuarios/${uid}/jogados`);
+  async listarJogados(usuarioId) {
+    const res = await api.get(`/usuarios/${usuarioId}/jogados`);
     return res.data;
   },
 
-  // Desejados
-  async adicionarDesejado(uid, jogoId) {
-    return axios.post(`${API_URL}/usuarios/${uid}/desejados/${Number(jogoId)}`);
-  },
+// Desejados
+async adicionarDesejado(usuarioId, jogoId) {
+  return api.post(`/usuarios/${usuarioId}/desejados/${Number(jogoId)}`, {}, {
+    withCredentials: true
+  });
+},
 
-  async removerDesejado(uid, jogoId) {
-    return axios.delete(`${API_URL}/usuarios/${uid}/desejados/${jogoId}`);
-  },
+async removerDesejado(usuarioId, jogoId) {
+  return api.delete(`/usuarios/${usuarioId}/desejados/${Number(jogoId)}`, {
+    withCredentials: true
+  });
+},
 
-  async listarDesejados(uid) {
-    const res = await axios.get(`${API_URL}/usuarios/${uid}/desejados`);
+  async listarDesejados(usuarioId) {
+    const res = await api.get(`/usuarios/${usuarioId}/desejados`);
     return res.data;
   },
 
-  // Registro (opcional)
-  async registrarUsuario(uid, nome, email) {
-    return axios.post(`${API_URL}/usuarios/registrar`, {
-      uid, nome, email
+  // Outros
+  async registrarUsuario(nome, email) {
+    return api.post(`/usuarios/register`, {
+      nome, email
     });
   },
 
-  // --- Método existente para Mais Favoritados ---
   async getMaisFavoritados() {
-    const res = await axios.get(`${API_URL}/jogos/favoritos/mais`);
+    const res = await api.get(`/jogos/favoritos/mais`);
     return res.data;
   },
 

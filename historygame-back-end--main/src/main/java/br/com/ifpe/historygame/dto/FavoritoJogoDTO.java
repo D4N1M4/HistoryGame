@@ -14,6 +14,7 @@ public class FavoritoJogoDTO {
     private String modoJogo;
     private String dataLancamento;
     private Long totalFavoritos; // ✅ Adicionado
+    private JogoDTO jogo;
 
     public FavoritoJogoDTO(Jogo jogo, Long totalFavoritos) {
         this.id = jogo.getId();
@@ -23,5 +24,7 @@ public class FavoritoJogoDTO {
         this.modoJogo = jogo.getModoJogo();
         this.dataLancamento = jogo.getDataLancamento().toString();
         this.totalFavoritos = totalFavoritos;
+        this.jogo = new JogoDTO();
     }
+    
 }
