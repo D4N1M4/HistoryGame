@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 @Component
 public class JogoMapper {
 
-
     public JogoDTO toDTO(Jogo jogo) {
         JogoDTO dto = new JogoDTO();
         dto.setId(jogo.getId());
@@ -20,6 +19,10 @@ public class JogoMapper {
         dto.setModoJogo(jogo.getModoJogo());
         dto.setDataLancamento(jogo.getDataLancamento());
         dto.setNumeroAcessos(jogo.getNumeroAcessos());
+
+        // --- ADIÇÃO NECESSÁRIA AQUI ---
+        dto.setNumeroAcessos(jogo.getNumeroAcessos());
+        // --- FIM DA ADIÇÃO ---
 
         dto.setGeneros(
             jogo.getGeneros().stream()
@@ -46,6 +49,7 @@ public Jogo toEntity(JogoDTO dto) {
     return jogo;
 }
 
+
     public GeneroDTO toGeneroDTO(Genero genero) {
         GeneroDTO dto = new GeneroDTO();
         dto.setId(genero.getId());
@@ -59,5 +63,4 @@ public Jogo toEntity(JogoDTO dto) {
         genero.setNome(dto.getNome());
         return genero;
     }
-
 }

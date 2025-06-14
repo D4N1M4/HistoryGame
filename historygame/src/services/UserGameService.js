@@ -2,7 +2,6 @@
 import api from '@/assets/js/axios';
 
 export default {
-// Favoritos
 async adicionarFavorito(usuarioId, jogoId) {
   return api.post(`/usuarios/${usuarioId}/favoritos/${Number(jogoId)}`, {}, {
     withCredentials: true
@@ -73,3 +72,4 @@ async removerDesejado(usuarioId, jogoId) {
     return res.data;
   },
 };
+

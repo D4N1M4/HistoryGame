@@ -70,6 +70,7 @@ public class SecurityConfig {
                     "/api/generos",
                     "/api/generos/**",
                     "/api/jogos/genero/{nomeGenero}",
+
                     "/api/jogos/{id}/acesso",
                     "/api/jogos/mais-acessados"
                 ).permitAll()

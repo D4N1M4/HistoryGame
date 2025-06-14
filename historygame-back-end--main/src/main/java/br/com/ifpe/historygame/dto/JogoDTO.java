@@ -1,10 +1,10 @@
 package br.com.ifpe.historygame.dto;
-import java.time.LocalDate;
-import java.util.List;
-
 
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -21,7 +21,7 @@ public class JogoDTO {
     private Integer favoritos;
     private Integer jogados;
     private Integer desejados;
-    
+
     public JogoDTO(Long id, String nome, String resumo, String capa, String modoJogo, LocalDate dataLancamento, Long numeroAcessos,
             List<GeneroDTO> generos, Integer favoritos, Integer jogados, Integer desejados) {
         this.id = id;
@@ -35,12 +35,9 @@ public class JogoDTO {
         this.jogados = jogados;
         this.desejados = desejados;
         this.numeroAcessos = numeroAcessos;
-
     }
 
     public JogoDTO() {
     }
 
 }
-
-

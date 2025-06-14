@@ -27,7 +27,7 @@ public class Jogo {
     @Column(name="capa", nullable=false)
     private String capa;
 
-    @Column(name="modoJogo", nullable=false)
+    @Column(name="modoJogo", nullable = false) // Certifique-se que esta linha está correta
     private String modoJogo;
 
     @Column(name="dataLancamento", nullable=false)
@@ -40,6 +40,7 @@ public class Jogo {
         inverseJoinColumns = @JoinColumn(name = "genero_id")
     )
     private List<Genero> generos;
+
 
     @Column(name = "numero_acessos", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
     private Long numeroAcessos = 0L; // Inicializa com 0 para novos jogos

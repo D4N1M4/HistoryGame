@@ -29,7 +29,6 @@ import api from 'axios';
 const router = useRouter();
 const authStore = useAuthStore();
 const emit = defineEmits(['card-click',  'access-incremented', 'edit', 'delete']);
-
 const props = defineProps({
   id: Number,
   nome: String,
@@ -100,10 +99,10 @@ const emitDelete = () => emit('delete', props.id);
 .card-img-top {
   width: 100%;
   height: 220px;
-  object-fit: contain; /* para exibir a imagem completa */
-  background-color: #f5f5f5; /* cor neutra atrás da imagem */
+  object-fit: contain;
+  background-color: #f5f5f5;
   border-bottom: 1px solid #e0e0e0;
-  padding: 10px; /* espaçamento para a imagem não ficar grudada */
+  padding: 10px;
 }
 
 .card-body {
@@ -132,9 +131,15 @@ const emitDelete = () => emit('delete', props.id);
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 3; /* limita a 3 linhas */
-  line-clamp: 3; /* padrão para compatibilidade */
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+.accesses-count {
+  font-weight: bold;
+  color: #000;
+  margin-top: 10px;
 }
 
 .card-footer {
@@ -145,6 +150,7 @@ const emitDelete = () => emit('delete', props.id);
 }
 .accesses-count {
   font-weight: bold;
+
   color: #000;
   margin-top: 10px;
 }
@@ -152,4 +158,6 @@ const emitDelete = () => emit('delete', props.id);
   font-size: 0.9rem;
   padding: 5px 10px;
 }
+
 </style>
+

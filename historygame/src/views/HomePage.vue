@@ -26,7 +26,7 @@
     <div class="card-grid">
 <CardComponent
   v-for="jogo in gamesFavoritos"
-  :key="jogo.id"
+  :key="jogo.id" || jogo.nome" 
   :id="jogo.id"
   :nome="jogo.nome || ''"
   :resumo="jogo.resumo || ''"
@@ -38,8 +38,6 @@
   @access-incremented="handleAccessIncremented"
 />
 
-
-    </div>
     <nav aria-label="Page navigation">
       <ul class="pagination justify-content-center">
         <li class="page-item" :class="{ disabled: currentPage === 1 }">
@@ -65,12 +63,11 @@
         </li>
       </ul>
     </nav>
-    <!-- Adicionando a seção de comentários -->
     <section class="comments-section">
       <h2>Últimos Comentários</h2>
       <cardComment 
         v-for="(review, index) in reviews" 
-        :key="index"
+        :key="index" 
         :stars="review.stars"
         :title="review.title"
         :comment="review.comment"
@@ -89,11 +86,11 @@ import { ref, computed, onMounted } from 'vue';
 import CardComponent from '@/components/cardComponent.vue';
 import cardComment from '@/components/cardComment.vue';
 import { useRouter } from 'vue-router';
-import UserGameService from '@/services/UserGameService'; // import novo
+import UserGameService from '@/services/UserGameService'; 
 
-const userGameService = UserGameService; // instancia do service correto
+const userGameService = UserGameService; 
 const gamesAcessados = ref([]);
-const gamesFavoritos = ref([]); // ref para os mais favoritados
+const gamesFavoritos = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(6);
 const router = useRouter();
@@ -103,24 +100,37 @@ const errorAcessados = ref(null);
 const loadingFavoritos = ref(true);
 const errorFavoritos = ref(null);
 
+// --- NOVAS VARIÁVEIS DE ESTADO ---
+const loadingAcessados = ref(true);
+const errorAcessados = ref(null);
+const loadingFavoritos = ref(true);
+const errorFavoritos = ref(null);
+// --- FIM NOVAS VARIÁVEIS ---
+
+
 const totalPages = computed(() => {
-return Math.ceil(gamesFavoritos.value.length / pageSize.value);
+  // Nota: paginating gamesFavoritos, mas exibindo gamesAcessados.
+  // Se a paginação for para a lista "Mais Acessados" no template, mude `gamesFavoritos.value.length` para `gamesAcessados.value.length`.
+  return Math.ceil(gamesFavoritos.value.length / pageSize.value); 
 });
 
 const paginatedGames = computed(() => {
-const start = (currentPage.value - 1) * pageSize.value;
-const end = start + pageSize.value;
-return gamesFavoritos.value.slice(start, end);
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  // **Atenção:** Seu paginatedGames está filtrando `gamesFavoritos`, mas o v-for acima usa `gamesAcessados`.
+  // Se você quer que a paginação seja para os jogos "Mais Acessados", mude `gamesFavoritos.value` para `gamesAcessados.value`.
+  // Por agora, vou manter como está no seu código, mas é um ponto de atenção.
+  return gamesFavoritos.value.slice(start, end); 
 });
 
 const pagesToShow = computed(() => {
-const startPage = Math.max(currentPage.value - 1, 1);
-const endPage = Math.min(currentPage.value + 1, totalPages.value);
-const pages = [];
-for (let i = startPage; i <= endPage; i++) {
-  pages.push(i);
-}
-return pages;
+  const startPage = Math.max(currentPage.value - 1, 1);
+  const endPage = Math.min(currentPage.value + 1, totalPages.value);
+  const pages = [];
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
+  return pages;
 });
 
 const getGamesAcessados = async () => {
@@ -153,29 +163,48 @@ const getGamesFavoritos = async () => {
   }
 };
 
+const changePage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
+
 const previousPage = () => {
-if (currentPage.value > 1) {
-  currentPage.value--;
-}
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
 };
 
 const nextPage = () => {
-if (currentPage.value < totalPages.value) {
-  currentPage.value++;
-}
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
 };
 
-const detalharJogos = (slug, id) => {
-router.push({ name: "DetalhesPage", params: { slug, id } });
+const detalharJogos = (id) => {
+  router.push({ name: "DetalhesPage", params: { id } });
 };
 
 const loadLastReview = async () => {
-console.log('Carregando primeira página de reviews...');
-try {
-  reviews.value = await userGameService.loadLastestReviews();
-} catch (error) {
-  console.error("Erro ao carregar reviews:", error);
-}
+  console.log('Carregando primeira página de reviews...');
+  try {
+    const response = await userGameService.loadLastestReviews();
+    reviews.value = response.data;
+  } catch (error) {
+    console.error("Erro ao carregar reviews:", error);
+  }
+};
+
+const handleAccessIncremented = (gameId) => {
+  const gameInAcessados = gamesAcessados.value.find(g => g.id === gameId);
+  if (gameInAcessados) {
+    gameInAcessados.numeroAcessos++;
+  }
+
+  const gameInFavoritos = gamesFavoritos.value.find(g => g.id === gameId);
+  if (gameInFavoritos) {
+    gameInFavoritos.numeroAcessos++;
+  }
 };
 
 const handleAccessIncremented = (gameId) => {
@@ -189,9 +218,9 @@ const handleAccessIncremented = (gameId) => {
   }
 };
 onMounted(() => {
-getGamesAcessados();
-getGamesFavoritos();
-loadLastReview();
+  getGamesAcessados();
+  getGamesFavoritos();
+  loadLastReview();
 });
 
 </script>
@@ -215,24 +244,25 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
+
 }
 
 .container {
-padding: 20px;
+  padding: 20px;
 }
 
 .card-grid {
-display: grid;
-grid-template-columns: repeat(3, 1fr); /* 3 colunas */
-grid-template-rows: repeat(2, auto); /* 2 linhas */
-gap: 20px;
-max-width: 80%; /* Reduzir a largura máxima da grade */
-margin: 0 auto; /* Centralizar a grade na página */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 colunas */
+  grid-template-rows: repeat(2, auto); /* 2 linhas */
+  gap: 20px;
+  max-width: 80%; /* Reduzir a largura máxima da grade */
+  margin: 0 auto; /* Centralizar a grade na página */
 }
 
 .card-grid > * {
-max-width: 95%; /* Ajustar a largura dos cards */
-margin: 0 auto; /* Centralizar os cards dentro das colunas */
+  max-width: 95%; /* Ajustar a largura dos cards */
+  margin: 0 auto; /* Centralizar os cards dentro das colunas */
 }
 
 .pagination-container {
@@ -247,7 +277,7 @@ margin: 0 auto; /* Centralizar os cards dentro das colunas */
 }
 
 .page-item {
-  margin: 0 4px;
+  margin: 0 5px;
 }
 
 .page-link {
@@ -279,7 +309,9 @@ margin: 0 auto; /* Centralizar os cards dentro das colunas */
   pointer-events: none;
   background-color: var(--cor-branco);
   border-color: #dee2e6;
+
 }
+
 .loading-message {
   text-align: center;
   font-size: 1.1em;
@@ -299,5 +331,3 @@ margin: 0 auto; /* Centralizar os cards dentro das colunas */
   margin-top: 20px;
 }
 </style>
-
-
