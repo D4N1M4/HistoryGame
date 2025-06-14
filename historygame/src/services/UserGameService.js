@@ -4,9 +4,9 @@ const API_URL = 'http://localhost:8080/api';
 
 export default {
   // Favoritos
-async adicionarFavorito(uid, jogoId) {
-  return axios.post(`${API_URL}/usuarios/${uid}/favoritos/${Number(jogoId)}`);
-},
+  async adicionarFavorito(uid, jogoId) {
+    return axios.post(`${API_URL}/usuarios/${uid}/favoritos/${Number(jogoId)}`);
+  },
 
   async removerFavorito(uid, jogoId) {
     return axios.delete(`${API_URL}/usuarios/${uid}/favoritos/${jogoId}`);
@@ -51,8 +51,18 @@ async adicionarFavorito(uid, jogoId) {
       uid, nome, email
     });
   },
+
+  // --- Método existente para Mais Favoritados ---
   async getMaisFavoritados() {
     const res = await axios.get(`${API_URL}/jogos/favoritos/mais`);
     return res.data;
-  }
+  },
+
+  // --- NOVO MÉTODO PARA MAIS ACESSADOS ---
+  async getMaisAcessados(limit = 3) { // Adicione um limite padrão, 
+    const res = await axios.get(`${API_URL}/jogos/mais-acessados?limit=${limit}`);
+    return res.data;
+  },
+
+
 };

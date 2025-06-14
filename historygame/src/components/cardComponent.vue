@@ -7,19 +7,21 @@
       <p class="card-text"><strong>Modo de Jogo:</strong> {{ modoJogo }}</p>
       <p class="card-text"><strong>Data de Lançamento:</strong> {{ dataLancamento }}</p>
 
+      <p class="card-text accesses-count"><strong>Acessos:</strong> {{ numeroAcessos }}</p>
+
       <slot name="footer"></slot>
     </div>
   </div>
 </template>
 
-<!-- cardComponent.vue -->
 <script setup>
 import { defineProps, computed, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
 import imagemPadrao from '@/assets/jogosSemImagem.jpg';
+import axios from 'axios'; // ADICIONE ESTA LINHA
 
 const router = useRouter();
-const emit = defineEmits(['card-click']);
+const emit = defineEmits(['card-click', 'access-incremented']); // ADICIONE 'access-incremented'
 
 const props = defineProps({
   id: { type: Number, required: true },
@@ -28,6 +30,7 @@ const props = defineProps({
   resumo: { type: String, required: true },
   dataLancamento: { type: String, required: true },
   capa: { type: String, required: true },
+  numeroAcessos: { type: Number, default: 0 } // ADICIONE ESTA LINHA
 });
 
 const maxLength = 100;
@@ -47,11 +50,19 @@ const fullImageUrl = computed(() => {
     : `https:${props.capa.replace('t_thumb', 't_cover_big')}`;
 });
 
-const handleClick = () => {
-  router.push({ name: 'DetalhesPage', params: { id: props.id } });
+// MODIFIQUE O MÉTODO handleClick
+const handleClick = async () => {
+  try {
+    await axios.patch(`http://localhost:8080/api/jogos/${props.id}/acesso`);
+    console.log(`Acesso incrementado para o jogo ID: ${props.id}`);
+    emit('access-incremented', props.id); // EMITE O EVENTO
+  } catch (error) {
+    console.error(`Erro ao incrementar acessos para o jogo ID: ${props.id}`, error);
+  } finally {
+    router.push({ name: 'DetalhesPage', params: { id: props.id } });
+  }
 };
 </script>
-
 
 <style scoped>
 .custom-card {
@@ -74,10 +85,10 @@ const handleClick = () => {
 .card-img-top {
   width: 100%;
   height: 220px;
-  object-fit: contain; /* para exibir a imagem completa */
-  background-color: #f5f5f5; /* cor neutra atrás da imagem */
+  object-fit: contain;
+  background-color: #f5f5f5;
   border-bottom: 1px solid #e0e0e0;
-  padding: 10px; /* espaçamento para a imagem não ficar grudada */
+  padding: 10px;
 }
 
 .card-body {
@@ -104,14 +115,25 @@ const handleClick = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 3; /* limita a 3 linhas */
-  line-clamp: 3; /* padrão para compatibilidade */
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+.accesses-count {
+  font-weight: bold;
+  color: #000;
+  margin-top: 10px;
 }
 
 .card-footer {
   font-size: 0.8rem;
   color: #999;
   text-align: right;
+}
+.accesses-count {
+  font-weight: bold;
+  color: #000; /* Ou a cor que preferir para destaque */
+  margin-top: 10px;
 }
 </style>

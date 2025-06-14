@@ -17,21 +17,19 @@
 
     <div v-if="paginatedGames && paginatedGames.length > 0">
       <div class="card-grid">
-<cardComponent
-  v-for="jogo in paginatedGames"
-  :key="jogo.id"
-  :id="jogo.id"
-  :nome="jogo.nome"
-  :resumo="jogo.resumo"
-  :modoJogo="jogo.modoJogo"
-  :dataLancamento="jogo.dataLancamento"
-  :capa="jogo.capa"
-  @card-click="detalhesPage" />
-
-
+        <cardComponent
+          v-for="jogo in paginatedGames"
+          :key="jogo.id"
+          :id="jogo.id"
+          :nome="jogo.nome"
+          :resumo="jogo.resumo"
+          :modoJogo="jogo.modoJogo"
+          :dataLancamento="jogo.dataLancamento"
+          :capa="jogo.capa"
+          :numeroAcessos="jogo.numeroAcessos" @card-click="detalhesPage" />
       </div>
     </div>
-  <p v-else>Nenhum jogo encontrado.</p>
+    <p v-else>Nenhum jogo encontrado.</p>
 
       <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">
@@ -158,8 +156,6 @@ onMounted(() => {
 
 </script>
 
-
-
 <style scoped>
 .games-page {
   display: flex;
@@ -234,5 +230,4 @@ onMounted(() => {
 .page-item.active .page-link {
   font-weight: bold;
 }
-
 </style>
