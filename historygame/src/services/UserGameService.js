@@ -66,5 +66,10 @@ async removerDesejado(usuarioId, jogoId) {
   async getMaisFavoritados() {
     const res = await api.get(`/jogos/favoritos/mais`);
     return res.data;
-  }
+  },
+
+  async getMaisAcessados(limit = 3) { // Adicione um limite padrão, 
+    const res = await api.get(`/jogos/mais-acessados?limit=${limit}`);
+    return res.data;
+  },
 };
