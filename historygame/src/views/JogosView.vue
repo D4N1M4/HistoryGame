@@ -33,6 +33,7 @@
             :modoJogo="jogo.modoJogo"
             :dataLancamento="jogo.dataLancamento"
             :capa="jogo.capa"
+            :numeroAcessos="jogo.numeroAcessos" @card-click="detalhesPage"
             @edit="editarJogo"
             @delete="deletarJogo"
           />

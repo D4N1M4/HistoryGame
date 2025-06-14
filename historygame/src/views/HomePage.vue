@@ -1,20 +1,28 @@
 <template>
   <div>
     <h1 class="text-center">Mais Acessados</h1>
+    <div v-if="loadingAcessados" class="loading-message">Carregando jogos mais acessados...</div>
+    <div v-else-if="errorAcessados" class="error-message">{{ errorAcessados }}</div>
+    <div v-else-if="gamesAcessados.length === 0" class="empty-message">Nenhum jogo mais acessado encontrado.</div>
     <div class="card-grid">
       <cardComponent
         v-for="(game, index) in gamesAcessados" 
-        :key="index"
+        :key="game.id || index" 
         :id="game.id"
-        :nome="game.name"
-        :resumo="game.summary"
+        :nome="game.nome"
+        :resumo="game.resumo"
         :modoJogo="game.modoJogo || 'Desconhecido'" 
-        :dataLancamento="game.dataLancamento || 'Indisponível'"
-        :capa="game.coverUrl"
-      />
+        :dataLancamento="game.dataLancamento" 
+        :capa="game.capa"
+        :numeroAcessos="game.numeroAcessos" 
+        @card-click="detalharJogos(game.id)" 
+        @access-incremented="handleAccessIncremented" />
     </div>
     
     <h1 class="text-center">Mais Favoritados</h1>
+    <div v-if="loadingFavoritos" class="loading-message">Carregando jogos mais favoritados...</div>
+    <div v-else-if="errorFavoritos" class="error-message">{{ errorFavoritos }}</div>
+    <div v-else-if="gamesFavoritos.length === 0" class="empty-message">Nenhum jogo mais favoritado encontrado.</div>
     <div class="card-grid">
 <CardComponent
   v-for="jogo in gamesFavoritos"
@@ -25,7 +33,11 @@
   :capa="jogo.capa || ''"
   :modoJogo="jogo.modoJogo || 'Desconhecido'"
   :dataLancamento="jogo.dataLancamento || 'Indisponível'"
+  :numeroAcessos="jogo.numeroAcessos"
+  @card-click="detalharJogos(jogo.id)"
+  @access-incremented="handleAccessIncremented"
 />
+
 
     </div>
     <nav aria-label="Page navigation">
@@ -86,6 +98,10 @@ const currentPage = ref(1);
 const pageSize = ref(6);
 const router = useRouter();
 const reviews = ref([]);
+const loadingAcessados = ref(true);
+const errorAcessados = ref(null);
+const loadingFavoritos = ref(true);
+const errorFavoritos = ref(null);
 
 const totalPages = computed(() => {
 return Math.ceil(gamesFavoritos.value.length / pageSize.value);
@@ -109,25 +125,32 @@ return pages;
 
 const getGamesAcessados = async () => {
   try {
-    // Se quiser manter a chamada DAOService para acessados
-    gamesAcessados.value = await UserGameService.getMaisAcessados(); // ou DAOService.getMaisAcess();
+    loadingAcessados.value = true; 
+    errorAcessados.value = null; 
+    const response = await userGameService.getMaisAcessados();
+    gamesAcessados.value = response; // CORRIGIDO: Removido o .data
+    console.log('DEBUG: Jogos Mais Acessados carregados:', gamesAcessados.value);
   } catch (error) {
     console.error('Erro ao buscar jogos mais acessados:', error);
+    errorAcessados.value = 'Falha ao carregar jogos mais acessados. Verifique o console.';
+  } finally {
+    loadingAcessados.value = false;
   }
 };
 
 const getGamesFavoritos = async () => {
   try {
-    gamesFavoritos.value = await userGameService.getMaisFavoritados();
+    loadingFavoritos.value = true;
+    errorFavoritos.value = null; 
+    const response = await userGameService.getMaisFavoritados();
+    gamesFavoritos.value = response; // CORRIGIDO: Removido o .data
+    console.log('DEBUG: Jogos Mais Favoritados carregados:', gamesFavoritos.value);
   } catch (error) {
     console.error('Erro ao buscar jogos mais favoritados:', error);
+    errorFavoritos.value = 'Falha ao carregar jogos mais favoritados. Verifique o console.';
+  } finally {
+    loadingFavoritos.value = false;
   }
-};
-
-const changePage = (page) => {
-if (page >= 1 && page <= totalPages.value) {
-  currentPage.value = page;
-}
 };
 
 const previousPage = () => {
@@ -155,11 +178,22 @@ try {
 }
 };
 
+const handleAccessIncremented = (gameId) => {
+  const gameInAcessados = gamesAcessados.value.find(g => g.id === gameId);
+  if (gameInAcessados) {
+    gameInAcessados.numeroAcessos++;
+  }
+  const gameInFavoritos = gamesFavoritos.value.find(g => g.id === gameId);
+    if (gameInFavoritos) {
+      gameInFavoritos.numeroAcessos++;
+  }
+};
 onMounted(() => {
 getGamesAcessados();
 getGamesFavoritos();
 loadLastReview();
 });
+
 </script>
 
 
@@ -245,6 +279,24 @@ margin: 0 auto; /* Centralizar os cards dentro das colunas */
   pointer-events: none;
   background-color: var(--cor-branco);
   border-color: #dee2e6;
+}
+.loading-message {
+  text-align: center;
+  font-size: 1.1em;
+  color: #888;
+  margin-top: 20px;
+  margin: 0 4px;
+}
+.error-message {
+  color: red;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.empty-message {
+  color: #888;
+  text-align: center;
+  margin-top: 20px;
 }
 </style>
 
