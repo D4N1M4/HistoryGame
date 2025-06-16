@@ -39,7 +39,7 @@ public class JogadoService {
 
     public List<JogadoJogoDTO> listarJogados(String usuarioId) {
         return jogadoRepository.findByUsuarioId(usuarioId).stream()
-            .map(jog -> new JogadoJogoDTO(jog.getJogo()))
+            .map(jog -> new JogadoJogoDTO(jog.getJogo(), jog.getJogo().getNumeroAcessos()))
             .toList();
     }
 }

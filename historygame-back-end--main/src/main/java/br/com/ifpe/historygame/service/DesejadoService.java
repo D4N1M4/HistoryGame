@@ -39,7 +39,7 @@ public class DesejadoService {
 
     public List<DesejadoJogoDTO> listarDesejados(String usuarioId) {
         return desejadoRepository.findByUsuarioId(usuarioId).stream()
-            .map(fav -> new DesejadoJogoDTO(fav.getJogo()))
+            .map(des -> new DesejadoJogoDTO(des.getJogo(), des.getJogo().getNumeroAcessos()))
             .toList();
     }
 }

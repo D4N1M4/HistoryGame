@@ -41,4 +41,6 @@ public class Jogo {
     )
     private List<Genero> generos;
 
+    @Column(name = "numero_acessos", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long numeroAcessos = 0L; // Inicializa com 0 para novos jogos
 }

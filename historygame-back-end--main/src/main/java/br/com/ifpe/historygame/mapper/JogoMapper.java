@@ -19,6 +19,7 @@ public class JogoMapper {
         dto.setCapa(jogo.getCapa());
         dto.setModoJogo(jogo.getModoJogo());
         dto.setDataLancamento(jogo.getDataLancamento());
+        dto.setNumeroAcessos(jogo.getNumeroAcessos());
 
         dto.setGeneros(
             jogo.getGeneros().stream()
@@ -37,6 +38,7 @@ public Jogo toEntity(JogoDTO dto) {
     jogo.setCapa(dto.getCapa());
     jogo.setModoJogo(dto.getModoJogo());
     jogo.setDataLancamento(dto.getDataLancamento());
+    jogo.setNumeroAcessos(dto.getNumeroAcessos() != null ? dto.getNumeroAcessos() : 0L);
 
     jogo.setGeneros(dto.getGeneros().stream()
          .map(this::toGenero)

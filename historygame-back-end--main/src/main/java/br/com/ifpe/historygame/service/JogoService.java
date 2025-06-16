@@ -2,8 +2,12 @@ package br.com.ifpe.historygame.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import br.com.ifpe.historygame.dto.JogoDTO;
@@ -57,6 +61,39 @@ public JogoDTO buscarPorId(Long id) {
 
     return dto;
 }
+    @Transactional
+    public Optional<JogoDTO> incrementarAcessos(Long id) {
+        Optional<Jogo> jogoOptional = jogoRepository.findById(id);
+
+        if (jogoOptional.isPresent()) {
+            Jogo jogo = jogoOptional.get();
+            // System.out.println("DEBUG: Jogo ID: " + jogo.getId() + " - Acessos ANTES: " + jogo.getNumeroAcessos());
+            
+            jogo.setNumeroAcessos(jogo.getNumeroAcessos() + 1);
+
+            // System.out.println("DEBUG: Jogo ID: " + jogo.getId() + " - Acessos DEPOIS do incremento em memória: " + jogo.getNumeroAcessos());
+            
+            Jogo jogoAtualizado = jogoRepository.save(jogo);
+
+            // System.out.println("DEBUG: Jogo ID: " + jogoAtualizado.getId() + " - Acessos DEPOIS do SAVE: " + jogoAtualizado.getNumeroAcessos());
+            
+            return Optional.of(mapper.toDTO(jogoAtualizado));
+        }
+        return Optional.empty();
+    }
+    public List<JogoDTO> getMaisAcessados(int limit) {
+        // Define a ordenação: por 'numeroAcessos' em ordem decrescente
+        Sort sort = Sort.by("numeroAcessos").descending();
+        // Define a paginação/limite: página 0, com 'limit' resultados, e a ordenação
+        Pageable pageable = PageRequest.of(0, limit, sort);
+
+        // Usa o método findAll(Pageable) do JpaRepository (que já existe na interface)
+        // para buscar os jogos com o limite e a ordenação desejados.
+        return jogoRepository.findAll(pageable)
+                             .stream()
+                             .map(mapper::toDTO)
+                             .toList();
+    }
 
     public List<JogoDTO> buscarPorNome(String termoBusca) {
         List<Jogo> jogos = jogoRepository.findByNomeContainingIgnoreCase(termoBusca);

@@ -41,7 +41,7 @@ public class FavoritoService {
 
     public List<FavoritoJogoDTO> listarFavoritos(String usuarioId) {
         return favoritoRepository.findByUsuarioId(usuarioId).stream()
-            .map(fav -> new FavoritoJogoDTO(fav.getJogo(), null))
+            .map(fav -> new FavoritoJogoDTO(fav.getJogo(), null,  fav.getJogo().getNumeroAcessos()))
             .toList();
     }
 
@@ -56,7 +56,7 @@ public class FavoritoService {
         .map(entry -> {
             Jogo jogo = entry.getKey();
             Long total = entry.getValue();
-            return new FavoritoJogoDTO(jogo, total); // precisa de construtor com totalFavoritos
+            return new FavoritoJogoDTO(jogo, total, jogo.getNumeroAcessos()); // precisa de construtor com totalFavoritos
         })
         .toList();
 }
