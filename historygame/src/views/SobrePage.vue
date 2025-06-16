@@ -30,45 +30,64 @@
 
 <style scoped>
 
- nav ul {
-  list-style: none;
+.SobrePage-container {
   display: flex;
-  justify-content: space-around;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0eafc, #cfdef3);
+  padding: 40px 20px;
 }
 
-nav ul li {
-  display: inline;
-}
-
-nav ul li a {
-  color: white;
-  text-decoration: none;
-}
-
-.about {
-  padding: 20px;
-  margin: 0 auto; 
+.SobrePage-container h1 {
+  color: #020021;
+  font-size: 3rem;
+  margin-bottom: 20px;
   text-align: center;
-  max-width: 800px
 }
 
-.social-media a {
-  margin: 0 10px;
+.SobrePage-container p {
+  background: linear-gradient(90deg, #3e60f8, #001c82, #020021);
+  color: #fefefe;
+  padding: 30px;
+  border-radius: 16px;
+  max-width: 900px;
+  line-height: 1.8;
+  font-size: 1.1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  text-align: justify;
 }
 
-.about h1 { 
-font-size: 38px; 
+footer {
+  background-color: #020021;
+  color: white;
+  text-align: center;
+  padding: 15px;
+  font-size: 0.9rem;
 }
 
-.about p { 
-font-size: 30px; 
+/* Responsividade */
+@media (max-width: 768px) {
+  .SobrePage-container h1 {
+    font-size: 2.2rem;
+  }
+
+  .SobrePage-container p {
+    font-size: 1rem;
+    padding: 20px;
+  }
 }
 
-footer { background-color: black; color: 
-    white; 
-    text-align: center;
-     padding: 10px; }
+@media (max-width: 480px) {
+  .SobrePage-container h1 {
+    font-size: 1.8rem;
+  }
 
-
+  .SobrePage-container p {
+    font-size: 0.95rem;
+    padding: 16px;
+  }
+}
 
 </style>

@@ -4,6 +4,7 @@ import router from './routes';
 import './assets/styles/global.css';
 import 'swiper/swiper-bundle.css';
 import { createPinia } from 'pinia';
+import '@fortawesome/fontawesome-free/css/all.css';
 
 const fontAwesomeLink = document.createElement('link');
 fontAwesomeLink.rel = 'stylesheet';

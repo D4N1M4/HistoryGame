@@ -1,103 +1,106 @@
 <template>
-    <div class="profile-container">
-        <div class="profile-header">
-            <img :src="user?.photoURL || defaultAvatar" alt="User Profile Picture" class="profile-picture" />
-            <input type="text" v-model="username" @input="checkChanges" class="edit-input username" />
-            <textarea v-model="bio" @input="checkChanges" class="edit-input bio"></textarea>
-        </div>
-        <div class="profile-details">
-            <h2>Detalhes do Usuário</h2>
-            <p>
-                <strong>Nome:</strong>
-                <input type="text" v-model="username" @input="checkChanges" class="edit-input" />
-            </p>
-            <p>
-                <strong>Email:</strong>
-                <input type="email" v-model="email" @input="checkChanges" class="edit-input" />
-            </p>
-            <p>
-                <strong>Data de Registro:</strong>
-                <input
-                    disabled
-                    type="text"
-                    v-model="registrationDate"
-                    class="edit-input"
-                />
-            </p>
-        </div>
-        <button @click="saveProfile" :disabled="!isChanged" class="save-button">Salvar</button>
-        <p v-if="saved" class="confirmation-message">Perfil salvo com sucesso!</p>
+  <div class="profile-container">
+    <div class="profile-header">
+      <img :src="user?.foto || defaultAvatar" alt="Foto de Perfil" class="profile-picture" />
+      <input type="text" v-model="username" @input="checkChanges" class="edit-input username" />
+      <textarea v-model="bio" @input="checkChanges" class="edit-input bio"></textarea>
     </div>
+
+    <div class="profile-details">
+      <h2>Detalhes do Usuário</h2>
+      <p>
+        <strong>Nome:</strong>
+        <input type="text" v-model="username" @input="checkChanges" class="edit-input" />
+      </p>
+      <p>
+        <strong>Email:</strong>
+        <input type="email" v-model="email" disabled class="edit-input" />
+      </p>
+    </div>
+
+    <button @click="saveProfile" :disabled="!isChanged" class="save-button">Salvar</button>
+    <p v-if="saved" class="confirmation-message">Perfil salvo com sucesso!</p>
+  </div>
 </template>
 
 <script>
 import { ref, onMounted } from "vue";
-import { getAuth } from "firebase/auth";
+import { useAuthStore } from "@/stores/authStore";
+import { useRouter } from "vue-router";
 
 export default {
   setup() {
-    const username = ref("");
+    const authStore = useAuthStore();
+    const router = useRouter();
+
+    const nome = ref("");
     const email = ref("");
-    const bio = ref("");
-    const name = ref("");
-    const registrationDate = ref("");
-    const user = ref(null);
+    const user = ref({});
     const saved = ref(false);
     const isChanged = ref(false);
+
     const defaultAvatar = require('@/assets/default_avatar.jpg');
 
-    // Função para carregar os dados do usuário
-    const loadUserProfile = () => {
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
+    const loadUserProfile = async () => {
+      try {
+        await authStore.verificarAuth(); // Verifica se está autenticado
+        const dados = authStore.usuario;
 
-      if (currentUser) {
-        const profile = currentUser.providerData[0] || {};
-        username.value = profile.displayName || "Usuário Anônimo";
-        email.value = profile.email || "E-mail não informado";
-        user.value = profile;
-        registrationDate.value= currentUser.metadata.creationTime;
-      } else {
-        console.warn("Usuário não autenticado");
+        if (!dados) {
+          router.push("/login"); // Redireciona se não estiver logado
+          return;
+        }
+
+        nome.value = dados.nome || "Usuário";
+        email.value = dados.email || "E-mail não informado";
+        user.value = dados;
+
+      } catch (error) {
+        console.error("Erro ao carregar perfil:", error);
+        router.push("/login");
       }
     };
 
-    // Carrega os dados ao montar o componente
+    const checkChanges = () => {
+      isChanged.value = true;
+    };
+
+    const saveProfile = async () => {
+      try {
+        await authStore.atualizarPerfil({
+          nome: username.value,
+        });
+
+        saved.value = true;
+        isChanged.value = false;
+
+        setTimeout(() => {
+          saved.value = false;
+        }, 2000);
+      } catch (error) {
+        console.error("Erro ao salvar perfil:", error);
+      }
+    };
+
     onMounted(() => {
       loadUserProfile();
     });
 
-    const checkChanges = () => {
-      // Verifica alterações (adicione lógica aqui se necessário)
-      isChanged.value = true;
-    };
-
-    const saveProfile = () => {
-      // Lógica de salvar (simulação)
-      saved.value = true;
-      isChanged.value = false;
-
-      setTimeout(() => {
-        saved.value = false;
-      }, 2000);
-    };
-
     return {
-      username,
+      nome,
       email,
-      bio,
-      name,
-      registrationDate,
       user,
       saved,
       isChanged,
       checkChanges,
       saveProfile,
-      defaultAvatar
+      defaultAvatar,
     };
   },
 };
 </script>
+
+
 
 <style scoped>
     .profile-container {
