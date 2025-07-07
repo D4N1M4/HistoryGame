@@ -34,6 +34,10 @@ public class Usuario {
     private String email;
 
     private String senha; // Se tiver autenticação
+    @Column(length = 500)
+    private String bio;
+
+    private String foto; // Pode ser a URL da imagem
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "usuario_roles",

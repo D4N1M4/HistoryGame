@@ -15,13 +15,15 @@ public class DesejadoJogoDTO {
     private String capa;
     private String modoJogo;
     private LocalDate dataLancamento;
+    private Long numeroAcessos;
 
-    public DesejadoJogoDTO(Jogo jogo) {
+    public DesejadoJogoDTO(Jogo jogo, Long numeroAcessos) {
         this.id = jogo.getId();
         this.nome = jogo.getNome();
         this.resumo = jogo.getResumo();
         this.capa = jogo.getCapa();
         this.modoJogo = jogo.getModoJogo();
         this.dataLancamento = jogo.getDataLancamento();
+        this.numeroAcessos = numeroAcessos;
     }
 }

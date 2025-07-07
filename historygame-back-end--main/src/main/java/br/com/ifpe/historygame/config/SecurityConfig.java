@@ -1,6 +1,8 @@
 package br.com.ifpe.historygame.config;
 
 
+import javax.ws.rs.HttpMethod;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -55,26 +57,38 @@ public class SecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // permite uso de sessão (JSESSIONID)
             )
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/",
-                    "/login",
-                    "/oauth2/**",
-                    "/api/usuarios/register",
-                    "/api/usuarios/login",
-                    "/api/usuarios/redefinir-senha",
-                    "/api/jogos/favoritos/mais",
-                    "/api/jogos/{id}",
-                    "/api/jogos/buscar",
-                    "/api/jogos",
-                    "/api/generos",
-                    "/api/generos/**",
-                    "/api/jogos/genero/{nomeGenero}"
-                ).permitAll()
-                .requestMatchers("/admin/**", "/api/usuarios/admin/**").hasRole("ADMIN")
-                .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-                .anyRequest().authenticated()
-            )
+                    .exceptionHandling(exceptions -> exceptions
+            .authenticationEntryPoint((request, response, authException) -> {
+                // Em vez de redirecionar para /login, retorna 401 Unauthorized
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Acesso não autorizado");
+            })
+        )
+.authorizeHttpRequests(auth -> auth
+    .requestMatchers(
+        "/",
+        "/oauth2/**",
+        "/api/usuarios/register",
+        "/api/usuarios/redefinir-senha",
+        "/api/jogos/favoritos/mais",
+        "/api/jogos/{id}",
+        "/api/jogos/buscar",
+        "/api/jogos",
+        "/api/generos",
+        "/api/generos/**",
+        "/api/jogos/genero/{nomeGenero}",
+        "/api/jogos/{id}/acesso",
+        "/api/jogos/mais-acessados"
+    ).permitAll()
+
+    // Comentários: leitura pública, escrita exige login, exclusão só admin
+    .requestMatchers(HttpMethod.GET, "/api/comentarios/**").permitAll()
+    .requestMatchers(HttpMethod.POST, "/api/comentarios/**").authenticated()
+    .requestMatchers(HttpMethod.DELETE, "/api/comentarios/**").hasRole("ADMIN")
+
+    .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+    .anyRequest().authenticated()
+)
+
             .formLogin(form -> form
                 .loginPage("/login") // não usado diretamente por frontend, mas obrigatório declarar
                 .permitAll()

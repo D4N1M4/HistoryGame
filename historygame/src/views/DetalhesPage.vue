@@ -12,24 +12,26 @@
         <p><b>Descrição</b></p>
         <p>{{ game.resumo }}</p>
 
-        <!-- Box de Avaliação -->
-        <div class="rating-box">
-          <button class="review-button" @click="showCommentModal = true">Avalie o jogo</button>
-          <comment-component 
-            v-if="showCommentModal" 
-            @close="handleClose" 
-            :game-id="gameId" 
-            :slug="slug"
-          />
-        </div>
+<!-- Box de Avaliação -->
+<div class="rating-box">
+  <button
+    class="review-button"
+    @click="handleOpenCommentModal"
+  >
+    Avalie o jogo
+  </button>
+
+  <CommentComponent
+    v-if="showCommentModal && autenticado"
+    @close="handleClose"
+    :game-id="Number(gameId)"
+    @comentarioEnviado="comentarioEnviado"
+  />
+</div>
 
         <!-- Estrelas e ícones -->
         <div class="rating-stars">
-          <span
-            v-for="star in 5"
-            :key="star"
-            class="star"
-          >
+          <span v-for="star in 5" :key="star" class="star">
             <i class="far fa-star"></i>
             <i
               class="fas fa-star filled"
@@ -38,27 +40,31 @@
           </span>
 
           <div class="stats" v-if="autenticado">
-            <div class="stat">
-              <img
-                @click="userGames('favoritos')"
-                class="icon"
-                :src="isFavorito ? coracaoColor : coracaoPB"
-              />
-            </div>
-            <div class="stat">
-              <img
-                @click="userGames('jogados')"
-                class="icon"
-                :src="isJogado ? controleColor : controlePB"
-              />
-            </div>
-            <div class="stat">
-              <img
-                @click="userGames('desejados')"
-                class="icon"
-                :src="isDesejado ? ampulhetaColor : ampulhetaPB"
-              />
-            </div>
+<div class="stat">
+  <img
+    @click="userGames('favoritos')"
+    class="icon"
+    :src="isFavorito ? coracaoColor : coracaoPB"
+/>
+  <span class="icon-label">Favorito</span>
+</div>
+<div class="stat">
+  <img
+    @click="userGames('jogados')"
+    class="icon"
+    :src="isJogado ? controleColor : controlePB"
+/>
+  <span class="icon-label">Jogado</span>
+</div>
+
+<div class="stat">
+  <img
+    @click="userGames('desejados')"
+    class="icon"
+    :src="isDesejado ? ampulhetaColor : ampulhetaPB"
+/>
+  <span class="icon-label">Desejado</span>
+</div>
           </div>
         </div>
       </div>
@@ -72,24 +78,28 @@
       <table class="info-table">
         <thead>
           <tr>
-            <th>Nomes alternativos</th>
             <th>Gêneros</th>
             <th>Modo de jogo</th>
+            <th>Data de Lançamento</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><span v-for="nome in game.nomesAlternativos" :key="nome">{{ nome }} <br /></span></td>
-            <td><span v-for="genero in game.generos" :key="genero.id">{{ genero.nome }} <br /></span></td>
-            <td><span v-for="modo in game.modosDeJogo" :key="modo">{{ modo }} <br /></span></td>
+            <td>
+              <span v-for="genero in game.generos" :key="genero.id">
+                {{ genero.nome }}<br />
+              </span>
+            </td>
+            <td>
+              <span v-if="Array.isArray(game.modosDeJogo)">
+                <span v-for="modo in game.modosDeJogo" :key="modo">{{ modo }}<br /></span>
+              </span>
+              <span v-else>{{ game.modoJogo }}</span>
+            </td>
+            <td>{{ formatarData(game.dataLancamento) }}</td>
           </tr>
         </tbody>
       </table>
-
-      <div class="history-section">
-        <h2>História</h2>
-        <p>{{ game.resumo }}</p>
-      </div>
     </div>
 
     <!-- Avaliações de Usuários -->
@@ -97,30 +107,41 @@
       <div class="header">
         <h1>Avaliações de Usuários</h1>
       </div>
-      <cardComment 
-        v-for="(review, index) in reviews" 
-        :key="index"
-        :stars="review.stars"
-        :nome="review.title"
-        :comment="review.comment"
-        :userPhotoURL="review.userPhotoURL"
-        :userName="review.userName"
-        :timestamp="review.timestamp"
-      />
-      <button @click="loadMoreReviews">Carregar mais comentários</button>
+      <div class="reviews-container">
+<CardComment
+  v-for="comentario in reviews"
+  :key="comentario.id"
+  :nome="comentario.nome"
+  :email="comentario.email"
+  :texto="comentario.texto"
+  :dataCriacao="comentario.dataCriacao"
+  :estrelas="comentario.estrelas"
+  :isAdmin="isAdmin"
+  @excluir-comentario="deletarComentario(comentario.id)"
+/>
+
+      <button
+        v-if="temMaisComentarios"
+        @click="loadMoreReviews"
+        class="load-more-button"
+      >
+        Carregar mais comentários
+      </button>    
+    </div>
     </div>
   </div>
 </template>
 
 <script>
-import { watch, ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+
 import JogoService from '@/services/JogoService';
-import DAOService from '@/services/DAOService';
 import UserGameService from '@/services/UserGameService';
+import ComentarioService from '@/services/ComentarioService';
 import CommentComponent from '@/components/commentComponent.vue';
-import cardComment from '@/components/cardComment.vue';
+import CardComment from '@/components/cardComment.vue';
 
 import imagemPadrao from '@/assets/jogosSemImagem.jpg';
 import coracaoColor from '@/assets/coracaoColor.png';
@@ -130,146 +151,192 @@ import controlePB from '@/assets/controle-de-video-gamePB.png';
 import ampulhetaColor from '@/assets/ampulhetaColor.png';
 import ampulhetaPB from '@/assets/ampulhetaPB.png';
 
-const daoService = new DAOService();
 const jogoService = new JogoService();
 
 export default {
   name: 'DetalhesPage',
   components: {
     CommentComponent,
-    cardComment,
+    CardComment
   },
   setup() {
     const route = useRoute();
     const authStore = useAuthStore();
 
     const gameId = ref(route.params.id);
-    const slug = ref(route.params.slug);
     const game = ref({});
-    const selectedStars = ref(0);
     const reviews = ref([]);
-    const showCommentModal = ref(false);
+    const selectedStars = ref(0);
+    const paginaAtual = ref(0);
+    const tamanhoPagina = 5;
+    const temMaisComentarios = ref(true);
 
+    const showCommentModal = ref(false);
     const isFavorito = ref(false);
     const isJogado = ref(false);
     const isDesejado = ref(false);
 
+    const autenticado = computed(() => authStore.autenticado);
+const isAdmin = computed(() => {
+  return authStore.usuario?.roles?.includes('ROLE_ADMIN');
+});
+
+    const formatarData = (data) => {
+      if (!data) return 'Não informada';
+      const dataFormatada = new Date(data);
+      return dataFormatada.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    };
+
     const fullImageUrl = computed(() => {
       const cover = game.value.capa;
-      if (!cover || cover.trim() === '') {
-        return imagemPadrao;
-      }
+      if (!cover || cover.trim() === '') return imagemPadrao;
       return cover.startsWith('http')
         ? cover
         : `https:${cover.replace('t_thumb', 't_cover_big')}`;
     });
 
-    const autenticado = computed(() => authStore.autenticado);
-
-    const getGameDetailsFromAPI = async () => {
+    const getGameDetails = async () => {
       try {
         game.value = await jogoService.getGameById(gameId.value);
-      } catch (error) {
-        console.error("Erro ao buscar jogo:", error);
+      } catch (err) {
+        console.error("Erro ao buscar jogo:", err);
       }
     };
 
     const getStars = async () => {
       try {
-        selectedStars.value = await daoService.getStars(gameId.value);
-      } catch (error) {
-        console.error("Erro ao buscar estrelas:", error);
+        selectedStars.value = await ComentarioService.getMediaEstrelas(gameId.value); 
+      } catch (err) {
+        console.error("Erro ao buscar média de estrelas:", err);
       }
     };
-
+    
     const loadReview = async () => {
       try {
-        reviews.value = await daoService.loadFirstPageReviews(gameId.value);
-      } catch (error) {
-        console.error("Erro ao carregar reviews:", error);
+        paginaAtual.value = 0;
+        const res = await ComentarioService.listarComentariosPaginado(gameId.value, paginaAtual.value, tamanhoPagina);
+        reviews.value = res.content;
+        temMaisComentarios.value = !res.last;
+      } catch (err) {
+        console.error("Erro ao carregar comentários:", err);
       }
     };
 
     const loadMoreReviews = async () => {
       try {
-        const newReviews = await daoService.loadNextPageReviews(gameId.value);
-        reviews.value = [...reviews.value, ...newReviews];
-      } catch (error) {
-        console.error("Erro ao carregar mais reviews:", error);
+        paginaAtual.value++;
+        const res = await ComentarioService.listarComentariosPaginado(gameId.value, paginaAtual.value, tamanhoPagina);
+        reviews.value = [...reviews.value, ...res.content];
+        temMaisComentarios.value = !res.last;
+      } catch (err) {
+        console.error("Erro ao carregar mais comentários:", err);
       }
     };
 
-const updateUserStatus = async (userId) => {
-  try {
-    const [favoritos, jogados, desejados] = await Promise.all([
-      UserGameService.listarFavoritos(userId),
-      UserGameService.listarJogados(userId),
-      UserGameService.listarDesejados(userId),
-    ]);
-    const gameIdParsed = parseInt(gameId.value);
-    // Assumindo que listarFavoritos/Jogados/Desejados retorna List<AlgoJogoDTO>
-    // e AlgoJogoDTO tem um campo 'id' que é o ID do Jogo.
-    isFavorito.value = favoritos.some(j => j.id === gameIdParsed); // AJUSTADO
-    isJogado.value = jogados.some(j => j.id === gameIdParsed);   // AJUSTADO
-    isDesejado.value = desejados.some(j => j.id === gameIdParsed); // AJUSTADO
-  } catch (error) { /* ... */ }
-};
+    const updateUserStatus = async (userId) => {
+      try {
+        const [favoritos, jogados, desejados] = await Promise.all([
+          UserGameService.listarFavoritos(userId),
+          UserGameService.listarJogados(userId),
+          UserGameService.listarDesejados(userId),
+        ]);
+        const gameIdParsed = parseInt(gameId.value);
+        isFavorito.value = favoritos.some(j => j.id === gameIdParsed);
+        isJogado.value = jogados.some(j => j.id === gameIdParsed);
+        isDesejado.value = desejados.some(j => j.id === gameIdParsed);
+      } catch (err) {
+        console.error("Erro ao verificar status do usuário:", err);
+      }
+    };
 
-const userGames = async (field) => {
-  const userId = authStore.usuario?.id;
-  if (!authStore.autenticado || !userId) {
-    alert("Você precisa estar autenticado para isso."); return;
-  }
-  try {
-    let isCurrentlyAdded;
-    let addMethod;
-    let removeMethod;
+    const userGames = async (field) => {
+      const userId = authStore.usuario?.id;
+      if (!autenticado.value || !userId) {
+        alert("Você precisa estar autenticado para isso.");
+        return;
+      }
 
-    switch (field) {
-      case 'favoritos':
-        isCurrentlyAdded = isFavorito.value;
-        addMethod = UserGameService.adicionarFavorito;
-        removeMethod = UserGameService.removerFavorito; // Adicionar este método ao UserGameService
-        break;
-      case 'jogados':
-        isCurrentlyAdded = isJogado.value;
-        addMethod = UserGameService.adicionarJogado;
-        removeMethod = UserGameService.removerJogado;   // Adicionar este método ao UserGameService
-        break;
-      case 'desejados':
-        isCurrentlyAdded = isDesejado.value;
-        addMethod = UserGameService.adicionarDesejado;
-        removeMethod = UserGameService.removerDesejado; // Este já existe no UserGameService
-        break;
-      default: return;
-    }
+      try {
+        let isAdded, addMethod, removeMethod;
 
-    if (isCurrentlyAdded) {
-      await removeMethod(userId, gameId.value);
-    } else {
-      await addMethod(userId, gameId.value);
-    }
-    await updateUserStatus(userId); // Atualiza o estado da UI
-  } catch (error) { /* ... */ }
-};
+        switch (field) {
+          case 'favoritos':
+            isAdded = isFavorito.value;
+            addMethod = UserGameService.adicionarFavorito;
+            removeMethod = UserGameService.removerFavorito;
+            break;
+          case 'jogados':
+            isAdded = isJogado.value;
+            addMethod = UserGameService.adicionarJogado;
+            removeMethod = UserGameService.removerJogado;
+            break;
+          case 'desejados':
+            isAdded = isDesejado.value;
+            addMethod = UserGameService.adicionarDesejado;
+            removeMethod = UserGameService.removerDesejado;
+            break;
+          default:
+            return;
+        }
 
+        if (isAdded) {
+          await removeMethod(userId, gameId.value);
+        } else {
+          await addMethod(userId, gameId.value);
+        }
+        await updateUserStatus(userId);
+      } catch (err) {
+        console.error("Erro ao atualizar status do jogo:", err);
+      }
+    };
 
     const handleClose = () => {
       showCommentModal.value = false;
     };
 
+    const comentarioEnviado = async () => {
+      showCommentModal.value = false;
+      await getStars();
+      await loadReview();
+    };
+
+    const deletarComentario = async (comentarioId) => {
+      const confirmar = confirm("Tem certeza que deseja excluir este comentário?");
+      if (!confirmar) return;
+
+      try {
+        await ComentarioService.deletarComentario(comentarioId);
+        reviews.value = reviews.value.filter(c => c.id !== comentarioId);
+      } catch (err) {
+        console.error("Erro ao deletar comentário:", err);
+        alert("Erro ao excluir o comentário.");
+      }
+    };
+
+    const handleOpenCommentModal = () => {
+      if (!autenticado.value) {
+        alert("Você precisa estar autenticado para avaliar o jogo.");
+        return;
+      }
+      showCommentModal.value = true;
+    };
+
     onMounted(async () => {
       await authStore.verificarAuth();
-      await getGameDetailsFromAPI();
+      console.log("Usuário:", authStore.usuario);
+      await getGameDetails();
       await getStars();
       await loadReview();
 
-      if (authStore.autenticado && authStore.usuario?.id) {
+      if (authStore.usuario?.id) {
         await updateUserStatus(authStore.usuario.id);
       }
     });
 
-    // Garante atualização caso auth seja carregado depois
     watch(() => authStore.usuario, (usuario) => {
       if (usuario?.id) {
         updateUserStatus(usuario.id);
@@ -279,38 +346,42 @@ const userGames = async (field) => {
     return {
       game,
       gameId,
-      slug,
       fullImageUrl,
       selectedStars,
       reviews,
-      loadMoreReviews,
+      temMaisComentarios,
       showCommentModal,
       handleClose,
+      comentarioEnviado,
+      loadMoreReviews,
+      formatarData,
+      autenticado,
       userGames,
       isFavorito,
       isJogado,
       isDesejado,
-      autenticado,
       coracaoColor,
+      handleOpenCommentModal,
       coracaoPB,
       controleColor,
       controlePB,
       ampulhetaColor,
-      ampulhetaPB
+      ampulhetaPB,
+      isAdmin,
+      deletarComentario // <-- aqui
     };
   }
 };
 </script>
-
   
   <style scoped>
   .container {
     display: flex;
     max-width: 1200px;
     margin: 20px auto;
-    background: #fff;
+    background: linear-gradient(80deg, #020021, #8c94f3);
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(2, 82, 255, 0.571);
     overflow: hidden;
   }
   
@@ -329,12 +400,12 @@ const userGames = async (field) => {
   
   .text-section h1 {
     margin: 0 0 10px;
-    color: #555;
+    color: #fbf9f9;
   }
   
   .text-section p {
     margin: 5px 0;
-    color: #555;
+    color: #f9f9f9;
   }
   
   /* Box de Avaliação */
@@ -345,7 +416,7 @@ const userGames = async (field) => {
   .review-button {
     width: 200px;
     padding: 12px;
-    background-color: #000;
+    background: linear-gradient(90deg, #748cf7,#1948f4, #03109d);
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -355,7 +426,8 @@ const userGames = async (field) => {
   }
   
   .review-button:hover {
-    background-color: #333;
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 10px 20px #001dfbaa;
   }
   
   /* Estrelas de Avaliação */
@@ -391,7 +463,9 @@ const userGames = async (field) => {
     gap: 20px;
     margin-left: 20px;
   }
-  
+  .stat:hover {
+    transform: translateY(-5px) scale(1.03);
+  }
   .stat {
     display: flex;
     flex-direction: column;
@@ -403,7 +477,13 @@ const userGames = async (field) => {
     color: #000;
     cursor: pointer;
   }
-  
+  .icon-label {
+  font-size: 12px;
+  margin-top: 4px;
+  color: #d9e7fcb5;
+  text-align: center;
+}
+
   /* Seção Sobre */
   .about-section {
     width: 90%;
@@ -411,12 +491,12 @@ const userGames = async (field) => {
     margin: 20px auto;
     background: #fff;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(1, 60, 255, 0.571);
     overflow: hidden;
   }
   
   .header {
-    background-color: #000;
+    background-color: #020021;
     color: #fff;
     text-align: center;
     padding: 10px 0;
@@ -424,13 +504,14 @@ const userGames = async (field) => {
   
   .header h1 {
     margin: 0;
+    color: #d0d0d0;
     font-size: 24px;
   }
   
   .info-table {
     width: 100%;
     border-collapse: unset;
-    text-align: left;
+    text-align: center;
     margin: 20px 0;
   }
   
@@ -450,73 +531,72 @@ const userGames = async (field) => {
     background-color: #f9f9f9;
   }
   
-  .history-section {
-    padding: 20px;
-  }
-  
-  .history-section h2 {
-    font-size: 20px;
-    margin-bottom: 10px;
-  }
-  
-  .history-section p {
-    font-size: 16px;
-    color: #555;
-  }
-  
   /* Estilo dos Quadrados de Avaliação de Usuários */
-  .reviews-container {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .review-card {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 250px;
-    text-align: center;
-  }
-  
-  .profile-img {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    margin-bottom: 10px;
-  }
-  
-  .review-content {
-    color: #555;
-  }
-  
-  .review-content h3 {
-    margin: 10px 0;
-    font-size: 18px;
-  }
-  
-  .review-content .stars {
-    display: flex;
-    gap: 5px;
-    justify-content: center;
-  }
-  
-  .review-content p {
-    margin-top: 10px;
-    font-size: 14px;
-  }
-
-  .comment-modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: white;
+/* Container geral dos comentários */
+.reviews-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   padding: 20px;
-  z-index: 1000;
 }
+
+/* Cartão de comentário */
+.comment-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-left: 6px solid #4169e1;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.comment-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+/* Estrelas no comentário */
+.comment-card .stars {
+  margin-bottom: 8px;
+}
+
+.comment-card .stars span {
+  font-size: 18px;
+  color: #fbc02d;
+}
+
+/* Texto do comentário */
+.comment-card p {
+  margin: 10px 0;
+  font-size: 15px;
+  color: #333;
+}
+
+/* Informações do usuário */
+.comment-card small {
+  color: #666;
+  font-size: 13px;
+}
+
+/* Botão "Carregar mais comentários" */
+.load-more-button {
+  margin: 20px auto;
+  padding: 12px 24px;
+  background: linear-gradient(90deg, #4f73ff, #324ad5);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  display: block;
+}
+
+.load-more-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(50, 74, 213, 0.3);
+}
+
 #showMessage {
   display: none;
 }

@@ -1,6 +1,8 @@
 package br.com.ifpe.historygame.dto;
 
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Set;
@@ -10,12 +12,15 @@ import br.com.ifpe.historygame.entity.Usuario;
 
 @Getter
 @Setter
+@Data
+@NoArgsConstructor
 public class UsuarioDTO {
     private String id;
     private String nome;
     private String email;
     private Set<String> roles;
-
+    private String bio;
+    private String foto;
 public UsuarioDTO(Usuario usuario) {
     this.id = usuario.getId();
     this.nome = usuario.getNome();
@@ -24,7 +29,8 @@ public UsuarioDTO(Usuario usuario) {
         usuario.getRoles().stream()
             .map(role -> role.getNome()) // pegar o nome da role da entidade
             .collect(Collectors.toSet());
-
+    this.bio = usuario.getBio();
+    this.foto = usuario.getFoto();
 }
 
 }

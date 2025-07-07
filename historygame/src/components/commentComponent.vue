@@ -1,231 +1,202 @@
 <template>
-  <form  @submit="submitReview">
-    <div class="modal">
-      <div class="modal-content">
-        <span class="close" @click="$emit('close')">&times;</span>
-        <div class="review-form">
-          <div class="review-form__header">
-            <h3>Avalie</h3>
-            <div class="review-form__stars">
-              <span
-                v-for="star in 5"
-                :key="star"
-                class="review-form__star"
-                :class="{ active: star <= selectedStars }"
-                @click="selectStar(star)"
-              >
-                <i class="fas fa-star" />
-              </span>
-            </div>
-          </div>
-          <div class="review-form__body">
-            <div class="review-form__input-group">
-              <label for="title">Título</label>
-              <input
-                type="text"
-                id="title"
-                v-model="reviewTitle"
-                placeholder="Digite o título da sua avaliação"
-                required
-              />
-            </div>
-            <div class="review-form__input-group">
-              <label for="comment">Comentário</label>
-              <textarea
-                id="comment"
-                v-model="reviewComment"
-                placeholder="Digite o seu comentário"
-                required
-              />
-            </div>
-          </div>
-          <button class="review-form__button" type="submit">Enviar</button>
-        </div>
+  <div class="modal">
+    <div class="modal-content">
+      <span class="close" @click="$emit('close')">&times;</span>
+      <h3>Avalie este jogo</h3>
+
+      <!-- Estrelas -->
+      <div class="stars">
+        <span
+          v-for="star in 5"
+          :key="star"
+          @click="selectStar(star)"
+          :style="{
+            color: star <= estrelas ? '#f90' : '#ccc',
+            cursor: 'pointer',
+            fontSize: '24px'
+          }"
+        >
+          ★
+        </span>
       </div>
+
+      <!-- Campo de comentário -->
+      <textarea
+        v-model="texto"
+        placeholder="Escreva seu comentário"
+        required
+        rows="4"
+      ></textarea>
+
+      <!-- Botão de envio -->
+      <button @click="enviarComentario">Enviar</button>
     </div>
-  </form>
-  </template>
-  
-  <script>
-import { onMounted, ref } from 'vue';
-import { getAuth } from "firebase/auth";
-import DAOService from '../services/DAOService.js'; // Ajuste o caminho conforme necessário
+  </div>
+</template>
 
-export default {
-    props: {
-        gameId: {
-            type:String,
-            required: true
-        },
-        slug: {
-          type:String,
-          required: true
-        }
-    },
-  setup(props, { emit }) {
-    const selectedStars = ref(0);
-    const reviewTitle = ref("");
-    const reviewComment = ref("");
+<script setup>
+import { ref } from 'vue';
+import { useAuthStore } from '@/stores/authStore';
+import ComentarioService from '@/services/ComentarioService';
 
-    const daoService = new DAOService();
+const authStore = useAuthStore(); // instancia authStore
 
-    const selectStar = (star) => {
-      selectedStars.value = star;
-      console.log(selectedStars.value);
-    };
-    function getUserID(){
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if(!user) {
-            alert("Usuário não está logado");
-            emit('close');
-            return;
-        }
-      return user;
-    }
-    const submitReview = async () => {
-        const user = getUserID();
-        console.log(props.gameId);
-      const review = {
-        userID: user.uid,
-        userPhotoUrl: user.photoURL,
-        userName: user.displayName, 
-        gameID: props.gameId,
-        stars: selectedStars.value,
-        title: reviewTitle.value,
-        comment: reviewComment.value,
-        slug: props.slug
-      };
-      await daoService.saveReview(review);
-      console.log("Avaliação enviada:", review);
-      alert("Avaliação enviada com sucesso!");
-      selectedStars.value = 0;
-      reviewTitle.value = "";
-      reviewComment.value = "";
-      emit('close');
-    };
-    onMounted(getUserID);
+const props = defineProps({
+  gameId: {
+    type: Number,
+    required: true
+  }
+});
 
-    return {
-      selectedStars,
-      reviewTitle,
-      reviewComment,
-      selectStar,
-      submitReview,
-    };
-  },
-};
+const emit = defineEmits(['close', 'comentarioEnviado']);
+
+const estrelas = ref(0);
+const texto = ref('');
+
+// Define estrela selecionada
+function selectStar(star) {
+  estrelas.value = star;
+}
+
+// Envia comentário
+async function enviarComentario() {
+  // Verifica se está autenticado
+  if (!authStore.autenticado) {
+    alert('Você precisa estar autenticado para comentar.');
+    return;
+  }
+
+  if (!texto.value.trim()) {
+    alert('Por favor, escreva um comentário.');
+    return;
+  }
+
+  if (estrelas.value === 0) {
+    alert('Por favor, selecione pelo menos uma estrela.');
+    return;
+  }
+
+  try {
+    await ComentarioService.criarComentario({
+      jogoId: props.gameId,
+      texto: texto.value,
+      estrelas: estrelas.value
+    });
+    emit('comentarioEnviado');
+    emit('close');
+  } catch (e) {
+    alert(e.message || 'Erro ao enviar comentário.');
+    console.error(e);
+  }
+
+}
 </script>
-  
-  <style scoped>
-  .modal {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
+
+<style scoped>
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #fefefe;
+  border-radius: 16px;
+  padding: 30px 24px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  position: relative;
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
   }
-  
-  .modal-content {
-    background-color: #fefefe;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 600px;
-    border-radius: 10px;
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
-  
-  .close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  .close:hover,
-  .close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-  }
-  .review-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 2rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    max-width: 500px;
-    margin: 0 auto;
-  }
-  
-  .review-form__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .review-form__stars {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  .review-form__star {
-    color: #ccc;
-    cursor: pointer;
-    font-size: 1.5rem;
-    transition: color 0.2s ease;
-  }
-  
-  .review-form__star.active {
-    color: #ffc107;
-  }
-  
-  .review-form__body {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .review-form__input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .review-form__input-group input,
-  .review-form__input-group textarea {
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-  }
-  
-  .review-form__input-group textarea {
-    resize: vertical;
-    min-height: 100px;
-  }
-  
-  .review-form__button {
-    padding: 0.75rem;
-    background-color: #000;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  
-  .review-form__button:hover {
-    background-color: #0056b3;
-  }
-  </style>
-  
+}
+
+.close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #555;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.close:hover {
+  color: #000;
+}
+
+h3 {
+  margin-bottom: 20px;
+  font-size: 20px;
+  color: #333;
+}
+
+.stars {
+  margin-bottom: 20px;
+}
+
+.stars span {
+  font-size: 28px;
+  transition: transform 0.2s ease;
+}
+
+.stars span:hover {
+  transform: scale(1.2);
+}
+
+textarea {
+  width: 90%;
+  padding: 12px;
+  border: 1px solid #041dfb;
+  border-radius: 10px;
+  font-size: 15px;
+  resize: none;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+textarea:focus {
+  border-color: #4f73ff;
+  box-shadow: 0 0 0 3px rgba(79, 115, 255, 0.2);
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background: linear-gradient(90deg, #748cf7,#1948f4, #03109d);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-position: right center;
+  box-shadow: 0 6px 16px rgba(50, 74, 213, 0.4);
+  transform: translateY(-2px);
+}
+</style>

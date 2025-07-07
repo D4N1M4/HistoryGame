@@ -94,4 +94,9 @@ public class UsuarioService {
 
     return usuario;
 }
+public Usuario atualizarPerfil(Usuario usuario) {
+    return usuarioRepository.save(usuario);
+}
+
+
 }

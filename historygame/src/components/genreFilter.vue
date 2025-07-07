@@ -60,7 +60,7 @@ export default {
   
 <style scoped>
   .genre-card {
-    background-color: #000;
+    background-color: #020021;
     color: #fff;
     padding: 20px;
     border-radius: 12px;
@@ -70,10 +70,10 @@ export default {
   }
   
   .category-button {
-    background-color: #1f1f1f;
+    background-color: #6dceff47;
     color: #fff;
     padding: 10px 16px;
-    border: 1px solid #444;
+    border: 1px solid #0138fd;
     border-radius: 8px;
     cursor: pointer;
     text-align: left;
@@ -81,8 +81,9 @@ export default {
   }
   
   .category-button:hover {
-    background-color: #333;
-    transform: translateY(-1px);
+    background: linear-gradient(90deg, #748cf7,#1948f4, #03109d);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.35);
   }
   
   .game-button {

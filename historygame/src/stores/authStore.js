@@ -62,7 +62,16 @@ async register(userInfo) {
         this.usuario = null;
         this.autenticado = false;
       }
-    },    
+    },
+async atualizarPerfil(dados) {
+  try {
+    const { data } = await api.put('/usuarios/me', dados);
+    this.usuario = data;
+  } catch (error) {
+    console.error("Erro ao atualizar perfil:", error);
+    throw error;
+  }
+},
     async logout() {
       try {
         await api.post('usuarios/logout', {}); 

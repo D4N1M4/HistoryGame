@@ -6,7 +6,6 @@ import br.com.ifpe.historygame.dto.UsuarioDTO;
 import br.com.ifpe.historygame.entity.Usuario;
 import br.com.ifpe.historygame.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,27 +42,28 @@ public class UsuarioController {
         return ResponseEntity.ok("Administrador registrado com sucesso.");
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest loginRequest, HttpServletRequest request) {
-        UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getSenha());
+@PostMapping("/login")
+public ResponseEntity<?> login(@RequestBody AuthRequest loginRequest, HttpServletRequest request) {
+    UsernamePasswordAuthenticationToken token =
+            new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getSenha());
 
-        try {
-            Authentication auth = authenticationManager.authenticate(token);
-            SecurityContextHolder.getContext().setAuthentication(auth);
-            request.getSession(true); // força criação da sessão
+    try {
+        Authentication auth = authenticationManager.authenticate(token);
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-            // Retorna apenas dados básicos do usuário autenticado
-            Usuario usuario = (Usuario) auth.getPrincipal();
-            return ResponseEntity.ok(Map.of(
-                "email", usuario.getEmail(),
-                "nome", usuario.getNome(),
-                "roles", usuario.getRoles()
-            ));
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciais inválidas");
-        }
+        // ⬇️ CORREÇÃO CRUCIAL AQUI:
+        Usuario usuario = (Usuario) auth.getPrincipal();
+        request.getSession(true).setAttribute("usuario", usuario); // <-- Isso é ESSENCIAL
+
+        return ResponseEntity.ok(Map.of(
+            "email", usuario.getEmail(),
+            "nome", usuario.getNome(),
+            "roles", usuario.getRoles()
+        ));
+    } catch (BadCredentialsException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciais inválidas");
     }
+}
 
 @GetMapping("/me")
 public ResponseEntity<UsuarioDTO> getUsuarioLogado(Authentication authentication) {
@@ -85,4 +85,27 @@ public ResponseEntity<UsuarioDTO> getUsuarioLogado(Authentication authentication
         usuarioService.redefinirSenha(request.getEmail(), request.getNovaSenha());
         return ResponseEntity.ok("Senha redefinida com sucesso.");
     }
+
+@PutMapping("/me")
+@PreAuthorize("isAuthenticated()")
+public ResponseEntity<?> atualizarPerfil(@RequestBody UsuarioDTO dto, Authentication auth) {
+    try {
+        String email = auth.getName();
+        Usuario usuario = usuarioService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (dto.getNome() != null) usuario.setNome(dto.getNome());
+        if (dto.getBio() != null) usuario.setBio(dto.getBio());
+        if (dto.getFoto() != null) usuario.setFoto(dto.getFoto());
+
+        Usuario atualizado = usuarioService.save(usuario);
+        return ResponseEntity.ok(new UsuarioDTO(atualizado));
+
+    } catch (Exception e) {
+        e.printStackTrace(); // aqui verá o stack trace no console
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                             .body("Erro ao atualizar perfil: " + e.getMessage());
+    }
+}
+
 }

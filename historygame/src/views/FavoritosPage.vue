@@ -2,36 +2,38 @@
   <div>
     <!-- Perfil -->
     <div class="profile-container d-flex justify-content-center align-items-center mb-4">
-      <div class="profile-pic-box">
-        <img :src="user?.photoURL || defaultAvatar" alt="Foto de Perfil" class="profile-pic" />
-      </div>
-      <div class="profile-info-box">
-        <div class="profile-info">
-          <h2 class="edit-input">{{ username }}</h2>
-          <p class="profile-description">Counter-Striker Player e Casual Gamer.</p>
-        </div>
-      </div>
+<div class="profile-pic-box">
+  <img :src="user?.foto || defaultAvatar" alt="Foto de Perfil" class="profile-pic" />
+</div>
+<div class="profile-info-box">
+  <div class="profile-info">
+    <h2 class="edit-input">{{ username }}</h2>
+    <p class="profile-description">{{ user?.bio || 'Bio não informada.' }}</p>
+  </div>
+</div>
     </div>
 
     <!-- Título -->
     <div>
       <h1 class="text-center">Meus Jogos</h1>
 
-      <!-- Campo de busca -->
-      <div class="search-container d-flex justify-content-between align-items-center mb-4">
-        <input 
-          type="text" 
-          class="form-control search-input" 
-          placeholder="Pesquisar..." 
-          v-model="searchTerm" 
-        />
-      </div>
+<div class="search-container d-flex align-items-center mb-4">
+  <div class="search-wrapper">
+    <i class="fas fa-search search-icon"></i>
+    <input 
+      type="text" 
+      class="form-control search-input" 
+      placeholder="Pesquisar..." 
+      v-model="searchTerm" 
+    />
+  </div>
+</div>
 
       <!-- Filtros -->
       <div class="btn-group d-flex justify-content-center mb-4" role="group">
         <button type="button" @click="getUserGames('favoritos')" class="btn btn-dark">Favoritos</button>
         <button type="button" @click="getUserGames('jogados')" class="btn btn-dark">Jogados</button>
-        <button type="button" @click="getUserGames('desejados')" class="btn btn-dark">Lista de Desejos</button>
+        <button type="button" @click="getUserGames('desejados')" class="btn btn-dark">Desejados</button>
       </div>
 
       <!-- Lista de jogos -->
@@ -45,6 +47,9 @@
   :resumo="jogo.resumo"
   :dataLancamento="jogo.dataLancamento"
   :capa="jogo.capa"
+  :numeroAcessos="jogo.numeroAcessos"
+  @card-click="detalharJogos(jogo.id)"
+  @access-incremented="handleAccessIncremented"
 >
   <template v-if="['favoritos', 'jogados', 'desejados'].includes(currentFilter)" #footer>
     <button 
@@ -215,6 +220,13 @@ async function removerJogo(jogoId, tipo) {
   }
 }
 
+async function handleAccessIncremented(jogoId) {
+  const jogo = allGames.value.find(j => j.id === jogoId);
+  if (jogo) {
+    jogo.numeroAcessos++;
+  }
+}
+
 // ✅ CORRIGIDO: Lógica de inicialização robusta
 onMounted(async () => {
   // Garante que o estado de autenticação da store seja verificado primeiro
@@ -243,36 +255,45 @@ watch(() => authStore.usuario, (novoUsuario) => {
 <style scoped>
 body {
   font-family: 'Arial', sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
 }
 
 .container {
-  padding: 20px;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .profile-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
 .profile-pic-box {
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  padding: 10px;
-  margin-right: 20px;
+  border: 2px solid #020021;
+  border-radius: 50%;
+  padding: 0.5rem;
+  margin-right: 2rem;
+  background-color: #b3c8fc;
+  box-shadow: 0 4px 12px rgba(2, 39, 252, 0.486);
 }
 
 .profile-pic {
-  width: 150px; /* Ajuste o tamanho conforme necessário */
-  height: 150px; /* Ajuste o tamanho conforme necessário */
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .profile-info-box {
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 30px;
-  background-color: #f9f9f9;
+  border-radius: 12px;
+  padding: 2rem;
+  background: linear-gradient(145deg, #ffffff, #cbdffa);
+  box-shadow: 5px 5px 15px rgba(43, 142, 255, 0.559);
 }
 
 .profile-info {
@@ -281,41 +302,74 @@ body {
 }
 
 .profile-name {
-  font-size: 2em; /* Ajuste o tamanho conforme necessário */
-  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #222;
 }
 
 .profile-description {
-  margin: 0;
-  color: gray;
-  font-size: 1.2em; /* Ajuste o tamanho conforme necessário */
+  font-size: 1.1rem;
+  color: #666;
+  
 }
 
 .search-container {
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin-bottom: 20px;
+  justify-content: center; /* Centraliza horizontalmente */
+  margin-bottom: 1.5rem;
+  width: 100%;
+
+}
+
+.search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 90%;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  color: #4c65c0;
+  font-size: 1rem;
+  z-index: 2;
 }
 
 .search-input {
-  flex: 0.5;
-  margin-right: 10px;
+  padding-left: 40px !important;
+  padding-right: 16px;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  border: 2px solid #0037ff;
+  box-shadow: 5px 5px 15px rgba(4, 92, 255, 0.575);
+  width: 100%;
 }
 
+/* Centraliza os botões de filtro */
+.btn-group {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+
 .btn-group .btn {
-  margin-right: 5px;
-  background: black;
+  background: #020021;
   color: white;
-  background-color: black;
   border: 1px solid white;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 10px;
+  padding: 0.6rem 7.2rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
 .btn-group .btn:hover {
-  opacity: 0.7;
+    background: linear-gradient(90deg, #748cf7,#1948f4, #03109d);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.35);
 }
 
 .card-grid {
@@ -323,54 +377,105 @@ body {
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   justify-content: center;
-  margin: 0 50px; /* Aumenta as margens laterais */
+  margin: 30px 50px; /* Aumenta as margens laterais */
 }
 
 .card-component {
-  width: 300px; /* Ajuste a largura conforme necessário */
-  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
-
+.card-component:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
 .pagination {
   display: flex;
   justify-content: center;
   list-style: none;
   padding: 0;
+  margin-top: 2rem;
 }
 
 .page-item {
-  margin: 0 5px;
+  margin: 0 0.4rem;
 }
 
 .page-link {
-  color: black;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ccc;
   text-decoration: none;
+  transition: all 0.3s ease;
 }
 
 .page-link:hover {
-  text-decoration: underline;
+  background: linear-gradient(90deg, #748cf7,#1948f4, #03109d);
+  color: #fff;
+  border-color: #007bff;
 }
 
 .page-item.active .page-link {
   font-weight: bold;
+  background-color: #0056b3;
+  color: #fff;
 }
 
 .btn-remover {
-  background: linear-gradient(to right, #666666, #bbbbbb, #000000);
-  color: #000;
+  background: #5d5c5cf0;
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 10px 15px;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
   font-weight: bold;
   transition: all 0.3s ease-in-out;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   width: 100%;
+  text-align: center;
 }
 
 .btn-remover:hover {
-  background: linear-gradient(to right, #070707, #bbbbbb, #666666);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(90deg, #ff4e4e, #ff1f1f, #d60000);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(255, 0, 0, 0.5);
 }
 
+.profile-description {
+  font-style: italic;
+  color: #666;
+  margin-top: 6px;
+  max-width: 320px;
+  word-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-pic-box {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+
+  .search-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-group .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-grid {
+    margin: 0;
+    grid-template-columns: 1fr;
+  }
+}
 </style>

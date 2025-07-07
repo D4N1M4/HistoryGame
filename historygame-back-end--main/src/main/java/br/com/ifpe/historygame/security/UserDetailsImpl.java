@@ -15,6 +15,9 @@ public class UserDetailsImpl implements UserDetails {
     public UserDetailsImpl(Usuario usuario) {
         this.usuario = usuario;
     }
+    public Usuario getUsuario() {
+        return this.usuario;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

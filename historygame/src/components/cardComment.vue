@@ -1,114 +1,97 @@
 <template>
-    <div class="review-container">
-        <div class="rating">
-            <span v-for="star in 5" :key="star" class="star" :style="{ color: star <= stars ? '#ffc107' : '#ddd' }">★</span>
-        </div>
-
-        <h2 class="review-title">{{ title }}</h2>
-        <p class="review-text">{{ truncatedText }}</p>
-
-        <div class="author-info">
-            <img :src="userPhotoURL || require('@/assets/default_avatar.jpg')" alt="Author Image" class="author-image">            
-            <span class="author-name">{{ userName }}</span>
-            <span class="author-date">{{ data }}</span>
-        </div>
+  <div class="comment-card">
+    <!-- Estrelas -->
+    <div class="stars">
+      <span
+        v-for="s in 5"
+        :key="s"
+        :style="{ color: s <= estrelas ? '#f90' : '#ccc', fontSize: '20px' }"
+      >
+        ★
+      </span>
     </div>
+
+    <!-- Texto do comentário -->
+    <p>{{ texto }}</p>
+
+    <!-- Dados do usuário e data -->
+    <small>
+      Por: {{ nome || 'Anônimo' }} ({{ email || 'sem email' }}) em
+      {{ formatarData(dataCriacao) }}
+    </small>
+
+    <!-- Botão de excluir visível apenas para admin -->
+    <button v-if="isAdmin" class="delete-button" @click="$emit('excluir-comentario')">
+      Excluir
+    </button>
+  </div>
 </template>
 
 <script setup>
-    import { defineProps, computed } from 'vue';
+const props = defineProps({
+  texto: String,
+  estrelas: Number,
+  dataCriacao: String,
+  nome: String,
+  email: String,
+  isAdmin: Boolean
+});
 
-    const props = defineProps({
-        stars: {
-            type: Number,
-            required: true
-        },
-        title: {
-            type: String,
-            required: true
-        },
-        comment: {
-            type: String,
-            required: true,
-            default: ''
-        },
-        userPhotoURL: {
-            type: String,
-            required: true,
-            default: '@/assets/default_avatar.jpg'
-        },
-        userName: {
-            type: String,
-            required: true
-        },
-        timestamp: {
-            type: String,
-            required: true
-        }
-    });
-
-    const maxLength = 100; // Limite de caracteres
-
-    const truncatedText = computed(() => {
-        return props.comment && props.comment.length > maxLength
-            ? props.comment.substring(0, maxLength) + '...'
-            : props.comment;
-    });
-
-    const data = computed(() =>  {
-        return props.timestamp.toDate().toLocaleString('pt-BR');
-    });
+// Função para formatar a data de forma segura
+function formatarData(data) {
+  if (!data) return 'Data desconhecida';
+  const d = new Date(data);
+  return d.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
 </script>
 
-<style>
-    .review-container {
-    border: 1px solid #ddd;
-    padding: 20px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    }
+<style scoped>
+.comment-card {
+  background-color: #f8f8f8;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: relative; /* necessário para posicionar o botão dentro */
+  padding-top: 40px; /* espaço para o botão no topo */
+}
 
-    .rating {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-    }
+.stars {
+  margin-bottom: 8px;
+}
 
-    .star {
-    font-size: 24px;
-    }
-
-    .review-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-    }
-
-    .review-text {
-    font-size: 1rem;
-    line-height: 1.5;
-    }
-
-    .author-info {
-    display: flex;
-    align-items: center;
-    margin-top: 15px;
-    }
-
-    .author-image {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
-    }
-
-    .author-name {
-    font-weight: bold;
-    }
-
-    .author-date {
-    color: #777;
-    margin-left: 10px;
-    }
-</style>
+.delete-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
   
+  margin: 0;
+  padding: 6px 12px;
+  background-image: linear-gradient(90deg, #f84557, #c82333);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
+  transition: background-position 0.4s ease, box-shadow 0.3s ease;
+  background-size: 200% 100%;
+  background-position: left center;
+  user-select: none;
+}
+
+.delete-button:hover {
+  background-position: right center;
+  box-shadow: 0 6px 16px rgba(220, 53, 69, 0.7);
+}
+
+.delete-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.6);
+}
+</style>
